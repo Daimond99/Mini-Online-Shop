@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+shop_system/config_local.py
+# DBeaver workspace (อาจมี connection/รหัสผ่านของเครื่องตัวเอง)
+.metadata/
+General/
+.claude/
+# เอกสารโจทย์ของอาจารย์
+docs/*.pdf
