@@ -54,36 +54,69 @@ shop_order 1──1 payment                            (order_line = M:N order �
 | กฎธุรกิจ | `check_can_ship` — จัดส่งได้เฉพาะออเดอร์ที่จ่ายแล้ว · ห้ามลบออเดอร์ที่จ่ายแล้ว |
 | รายงาน | สินค้าขายดี (JOIN+GROUP BY) · ลูกค้ายอดเกินค่าเฉลี่ย (subquery+AVG) · รีวิว ≥ 4 (HAVING) |
 
-## วิธีรัน
+## วิธีติดตั้งและรัน (สำหรับคนที่ clone ไป)
 
-1. เปิด MySQL แล้วรัน `database/schema.sql` ใน DBeaver (สร้างตาราง + ข้อมูล)
-2. คัดลอก `shop_system/config_example.py` เป็น `shop_system/config_local.py` แล้วใส่ user/password ของ MySQL ตัวเอง
-   (`config_local.py` ไม่ถูกอัปขึ้น GitHub เพื่อไม่ให้รหัสผ่านหลุด)
-3. ติดตั้งและรัน:
+**สิ่งที่ต้องมี:** Python 3.10+, MySQL 8 (เปิดอยู่ที่ port 3306), โปรแกรมจัดการ DB เช่น DBeaver (หรือใช้ `mysql` command line)
+
+**1. Clone โปรเจกต์**
+
+```bash
+git clone https://github.com/Daimond99/Mini-Online-Shop.git
+cd Mini-Online-Shop
+```
+
+**2. สร้างฐานข้อมูลและตาราง**
+
+เปิด DBeaver (หรือ MySQL client) ต่อ MySQL ของเครื่อง แล้วรันตามลำดับ:
+
+```sql
+CREATE DATABASE project69 CHARACTER SET utf8mb4;
+USE project69;
+```
+
+จากนั้นเปิดไฟล์ `database/schema.sql` แล้ว **รันทั้งไฟล์** (DBeaver: Execute Script / Alt+X) ไฟล์นี้จะลบตารางเก่าที่ชื่อซ้ำ สร้างตารางทั้ง 6 ตาราง และใส่ข้อมูลตัวอย่าง
+
+ตรวจว่าสำเร็จ: `SELECT COUNT(*) FROM customer;` ต้องได้ 8
+
+**3. ตั้งค่าการเชื่อมต่อ**
 
 ```bash
 cd shop_system
+copy config_example.py config_local.py      # Windows  (macOS/Linux: cp config_example.py config_local.py)
+```
+
+เปิด `config_local.py` แล้วแก้ `DB_USER`, `DB_PASSWORD` (และ `DB_NAME`, `DB_HOST`, `DB_PORT` ถ้าต่างจากค่าตัวอย่าง) ให้ตรงกับ MySQL ของเครื่องตัวเอง ไฟล์นี้ไม่ถูกอัปขึ้น GitHub
+
+**4. ติดตั้งไลบรารีและรัน**
+
+```bash
 pip install -r requirements.txt
 python app.py
 ```
 
-4. เปิด http://127.0.0.1:5000 (หน้ารายงานที่ `/report`)
+**5. เปิดเว็บ**
 
-## ความคืบหน้า (อัปเดต 7 ต.ค. 2026)
+- http://127.0.0.1:5000 — จัดการข้อมูล (แท็บ ลูกค้า / สินค้า / ออเดอร์: ค้นหา เพิ่ม แก้ไข ลบ)
+- http://127.0.0.1:5000/report — รายงานและการ์ดสรุป
 
-### สำเร็จแล้ว
-- [x] ER diagram + `database/schema.sql` (6 ตาราง, PK/FK/CHECK/UNIQUE, sample data ทุกตาราง ≥ 8 แถว, มีออเดอร์ที่ยกเลิก 1 ใบไว้ทดสอบรายงาน)
-- [x] เชื่อม MySQL local ได้ (ตรวจแล้วว่า DBeaver กับเว็บใช้ DB `project69` ตัวเดียวกัน)
-- [x] CRUD ครบ 3 ตารางหลัก: customer, product, shop_order (ค้นหา/ดู/เพิ่ม/แก้/ลบ)
-- [x] กฎธุรกิจ: จัดส่งได้เฉพาะออเดอร์ที่จ่ายแล้ว · ห้ามลบออเดอร์ที่จ่ายแล้ว · ลบลูกค้า/สินค้าที่มีออเดอร์หรือรีวิวไม่ได้ · อีเมลซ้ำแจ้งเตือน
-- [x] รายงานบังคับ 3 ตัว (ทุกตัว JOIN ≥ 3 ตาราง) + การ์ดสรุป 6 ใบ
-- [x] ป้องกัน SQL injection (ใช้ `%s` ทุก query) และทดสอบแล้ว
-- [x] ทดสอบระบบแบบผู้ใช้ ~30 กรณี ผ่านทั้งหมด
-- [x] ตรวจเทียบกับ PDF โจทย์ทุกข้อในขอบเขต
+## ลองใช้งานดู (ตัวอย่างสิ่งที่ควรเห็น)
 
-### ยังเหลือ
-- [ ] **ฟีเจอร์พิเศษเฉพาะกลุ่ม** (หน้า 9 ของโจทย์) — ยังไม่ทราบว่ากลุ่มได้อะไร ต้องเช็คในไฟล์คะแนนของอาจารย์
-- [ ] ปรับตาม feedback รอบ 1 — ยังไม่ทราบ feedback
-- [ ] ยืนยันกับอาจารย์ว่าโจทย์ 4 ไม่ต้องมี self-reference
-- [ ] ทำความเข้าใจระบบให้ตอบรายบุคคลได้ (SQL ทุกฟังก์ชัน, ทำไม JOIN/FK ตรงนั้น, `WHERE` vs `HAVING`, ทำไมเก็บ `unit_price`, ทำไม `payment` เป็น 1:1)
-- [ ] ปรับปรุงเพิ่มเติม (optimize) ถ้ามีเวลา เช่น index, transaction
+| ทำอะไร | ผลที่ควรได้ |
+|---|---|
+| หน้า `/report` | สินค้าขายดีอันดับ 1 = Logitech G502 HERO (15 ชิ้น), ลูกค้ายอดเกินค่าเฉลี่ย 4 คน, สินค้ารีวิวเฉลี่ย ≥ 4 มี 3 รายการ |
+| แท็บ ออเดอร์ → แก้ออเดอร์ #9 (ยังไม่จ่าย) เป็น `shipped` | ขึ้นข้อความ "ออเดอร์นี้ยังไม่ได้ชำระเงิน จัดส่งไม่ได้" |
+| ลบออเดอร์ #1 (จ่ายแล้ว) | ขึ้นข้อความ "ออเดอร์นี้ชำระเงินแล้ว ลบไม่ได้" |
+| ลบลูกค้า #1 (มีออเดอร์) | ขึ้นข้อความ "ลูกค้ารายนี้มีออเดอร์หรือรีวิวอยู่ ลบไม่ได้" |
+| เพิ่มลูกค้า 2 คนโดยไม่กรอกอีเมล | บันทึกได้ทั้งคู่ (อีเมลที่ว่างเก็บเป็น NULL) |
+
+## แก้ปัญหาที่พบบ่อย
+
+| อาการ | สาเหตุ / วิธีแก้ |
+|---|---|
+| `Access denied for user` | `DB_USER` / `DB_PASSWORD` ใน `config_local.py` ไม่ตรงกับ MySQL ของเครื่อง |
+| `Unknown database 'project69'` | ยังไม่ได้รัน `CREATE DATABASE project69` (ขั้นที่ 2) หรือตั้ง `DB_NAME` ไม่ตรง |
+| `Can't connect to MySQL server` | MySQL ยังไม่เปิด หรือ port ไม่ใช่ 3306 |
+| `Table ... doesn't exist` | ยังไม่ได้รัน `database/schema.sql` |
+| `No module named 'flask'` | ยังไม่ได้ `pip install -r requirements.txt` หรือติดตั้งลง Python คนละตัวกับที่ใช้รัน (ลอง `python -m pip install -r requirements.txt`) |
+| ภาษาไทยเป็น `???` | สร้าง DB โดยไม่ใส่ `CHARACTER SET utf8mb4` |
+| ค้นหาแล้วไม่ขึ้นข้อมูล | กดปุ่ม "🔍 ค้นหา" ก่อน (หน้าเว็บไม่โหลดข้อมูลอัตโนมัติ) |
