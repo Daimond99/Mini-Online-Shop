@@ -6,4 +6,4 @@ shop_system/config_local.py
 General/
 .claude/
 # เอกสารโจทย์ของอาจารย์
-docs/*.pdf
+*.pdf

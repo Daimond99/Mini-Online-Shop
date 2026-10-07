@@ -1,40 +1,68 @@
-// ============================================================
-//  report.js  —  ตรรกะหน้ารายงาน (ทำให้เสร็จแล้ว ★)
-// ============================================================
-const $ = (s) => document.querySelector(s);
-async function api(url) { return (await fetch(url)).json(); }
-function fillTable(tableSel, statusSel, r) {
-  const t = $(tableSel), st = $(statusSel);
-  const thead = t.querySelector("thead"), tbody = t.querySelector("tbody");
-  thead.innerHTML = ""; tbody.innerHTML = "";
-  if (!r.ok) { st.className = "status " + (r.todo ? "todo" : "err"); st.textContent = (r.todo ? "🚧 " : "⚠️ ") + r.error; return; }
-  const rows = r.data || [];
-  if (!rows.length) { st.className = "status"; st.textContent = "ไม่มีข้อมูล"; return; }
-  st.textContent = "";
-  const cols = Object.keys(rows[0]);
-  thead.innerHTML = "<tr>" + cols.map(c => "<th>" + c + "</th>").join("") + "</tr>";
-  tbody.innerHTML = rows.map(row => "<tr>" + cols.map(c => "<td>" + (row[c] ?? "—") + "</td>").join("") + "</tr>").join("");
+// report.js — หน้ารายงาน: ขอข้อมูลจาก /api/reports แล้ววาดการ์ดและตาราง
+
+// ขอข้อมูลจากหลังบ้าน
+async function getJson(url) {
+  const response = await fetch(url);
+  return await response.json();
 }
-async function loadSummary() {
-  // report_summary() คืน dict {ชื่อการ์ด: ตัวเลข} → 1 คีย์ = 1 การ์ด
-  const r = await api("/api/reports/summary");
-  const box = $("#summary");
-  if (!r.ok) { box.innerHTML = '<div style="grid-column:1/-1" class="status ' + (r.todo ? "todo" : "err") + '">' + (r.todo ? "🚧 " : "⚠️ ") + r.error + '</div>'; return; }
-  box.innerHTML = Object.entries(r.data || {}).map(([label, num]) =>
-    '<div class="metric"><div class="metric-num">' + (num ?? "—") + '</div><div class="metric-label">' + label + '</div></div>').join("");
+
+// การ์ดตัวเลขด้านบน (1 ชื่อ = 1 การ์ด)
+async function showSummaryCards() {
+  const result = await getJson("/api/reports/summary");
+  const box = document.querySelector("#summary");
+
+  if (!result.ok) {
+    box.innerHTML = `<div class="status err">⚠️ ${result.error}</div>`;
+    return;
+  }
+
+  let html = "";
+  for (const label in result.data) {
+    html += `
+      <div class="metric">
+        <div class="metric-num">${result.data[label]}</div>
+        <div class="metric-label">${label}</div>
+      </div>`;
+  }
+  box.innerHTML = html;
 }
-async function loadAll() {
-  loadSummary();
-  // สร้างกล่องรายงานตามรายการ REPORTS ใน db.py
-  const list = await api("/api/reports");
-  for (const rep of (list.data || [])) {
-    const id = "rep_" + rep.key.replace(/\W/g, "_");
-    const sec = document.createElement("section");
-    sec.className = "card";
-    sec.innerHTML = '<h3>' + rep.title + '</h3><div id="' + id + '_status" class="status"></div>' +
-      '<div class="table-wrap"><table id="' + id + '_table"><thead></thead><tbody></tbody></table></div>';
-    $("#reports").appendChild(sec);
-    fillTable("#" + id + "_table", "#" + id + "_status", await api("/api/reports/" + rep.key));
+
+// สร้างตารางจากแถวข้อมูล (หัวตารางคือชื่อหลัง AS ใน SQL)
+function makeTableHtml(rows) {
+  if (rows.length === 0) return "<p class='status'>ไม่มีข้อมูล</p>";
+
+  const columns = Object.keys(rows[0]);
+  let html = "<table><thead><tr>";
+  for (const column of columns) {
+    html += `<th>${column}</th>`;
+  }
+  html += "</tr></thead><tbody>";
+
+  for (const row of rows) {
+    html += "<tr>";
+    for (const column of columns) {
+      html += `<td>${row[column]}</td>`;
+    }
+    html += "</tr>";
+  }
+  return html + "</tbody></table>";
+}
+
+// รายงานทุกตัว: 1 กล่องต่อ 1 รายงาน
+async function showReports() {
+  const list = await getJson("/api/reports");
+
+  for (const report of list.data) {
+    const result = await getJson("/api/reports/" + report.key);
+    const content = result.ok ? makeTableHtml(result.data) : `<div class="status err">⚠️ ${result.error}</div>`;
+
+    document.querySelector("#reports").innerHTML += `
+      <section class="card">
+        <h3>${report.title}</h3>
+        <div class="table-wrap">${content}</div>
+      </section>`;
   }
 }
-loadAll();
+
+showSummaryCards();
+showReports();

@@ -1,19 +1,20 @@
-# ============================================================
-#  db.py — ชั้นติดต่อฐานข้อมูล
-#  ใช้ %s เป็น placeholder เสมอ (กัน SQL injection)
-# ============================================================
+# db.py — SQL ทั้งหมดของระบบ
+# สารบัญ: 1.ตัวช่วยเชื่อม DB  2.ลูกค้า  3.สินค้า  4.ออเดอร์  5.รายงาน  6.REPORTS
+# ค่าจากผู้ใช้ส่งผ่าน %s เสมอ · raise ValueError("...") = แจ้งผู้ใช้เป็น alert และไม่บันทึก
 import mysql.connector
 import config
 
 
+# ---------- 1. ตัวช่วยเชื่อมฐานข้อมูล ----------
 def get_connection():
+    """เปิดการเชื่อมต่อ MySQL ตามค่าใน config.py"""
     return mysql.connector.connect(
         host=config.DB_HOST, user=config.DB_USER, password=config.DB_PASSWORD,
         database=config.DB_NAME, port=config.DB_PORT)
 
 
 def run_query(sql, params=None):
-    """รัน SELECT คืนผลเป็น list ของ dict"""
+    """รัน SELECT คืน list ของ dict"""
     conn = get_connection(); cur = conn.cursor(dictionary=True)
     cur.execute(sql, params or ()); rows = cur.fetchall()
     cur.close(); conn.close(); return rows
@@ -28,40 +29,42 @@ def run_command(sql, params=None):
 
 
 def blank_to_none(value):
-    """ช่องที่ไม่ได้กรอกในฟอร์มจะส่งมาเป็น "" — แปลงเป็น None (= NULL ใน SQL)
-    ใช้กับคอลัมน์ที่ว่างได้ เช่น email (UNIQUE) เพราะ '' ซ้ำกันไม่ได้"""
+    """ช่องว่างในฟอร์ม -> None (NULL) เพราะ email เป็น UNIQUE: ข้อความว่างซ้ำไม่ได้ แต่ NULL ซ้ำได้"""
     return None if value in ("", None) else value
 
 
-# ---------- ลูกค้า (customer) ----------
+# ---------- 2. ลูกค้า (customer) ----------
 def search_customers(filters):
+    """ค้นหาลูกค้าตามชื่อ / อีเมล / ระดับ (ช่องที่ไม่กรอกจะไม่นำมากรอง)"""
     sql = "SELECT * FROM customer WHERE 1=1"
     params = []
     if filters.get("name"):
-        sql += " AND name LIKE %s"
+        sql += " AND name LIKE %s"          # ข้อความ: LIKE ค้นบางส่วน
         params.append(f"%{filters['name']}%")
     if filters.get("email"):
         sql += " AND email LIKE %s"
         params.append(f"%{filters['email']}%")
     if filters.get("tier"):
-        sql += " AND tier = %s"
+        sql += " AND tier = %s"             # dropdown: = ตรงตัว
         params.append(filters["tier"])
     sql += " ORDER BY cust_id"
     return run_query(sql, params)
 
 
 def get_customer(cust_id):
+    """ดึงลูกค้า 1 คนตามรหัส (ใช้เติมฟอร์มแก้ไข)"""
     rows = run_query("SELECT * FROM customer WHERE cust_id = %s", (cust_id,))
     return rows[0] if rows else None
 
 
 def _check_email_unique(email, cust_id=0):
-    """email เป็น UNIQUE — แจ้งข้อความอ่านง่ายแทน error ดิบของ MySQL (cust_id = คนที่กำลังแก้ ไม่นับตัวเอง)"""
+    """ตรวจอีเมลซ้ำ (cust_id = คนที่กำลังแก้ ไม่นับตัวเอง)"""
     if email and run_query("SELECT 1 FROM customer WHERE email = %s AND cust_id <> %s", (email, cust_id)):
         raise ValueError(f"อีเมล {email} ถูกใช้แล้ว")
 
 
 def create_customer(data):
+    """เพิ่มลูกค้าใหม่"""
     email = blank_to_none(data.get("email"))
     _check_email_unique(email)
     sql = """INSERT INTO customer (name, email, address, tier)
@@ -70,6 +73,7 @@ def create_customer(data):
 
 
 def update_customer(cust_id, data):
+    """แก้ไขข้อมูลลูกค้า"""
     email = blank_to_none(data.get("email"))
     _check_email_unique(email, cust_id)
     sql = """UPDATE customer SET name = %s, email = %s, address = %s, tier = %s
@@ -79,6 +83,8 @@ def update_customer(cust_id, data):
 
 
 def delete_customer(cust_id):
+    """ลบลูกค้า (ลบไม่ได้ถ้ามีออเดอร์หรือรีวิว)"""
+    # มีออเดอร์หรือรีวิวอยู่ ลบไม่ได้
     sql = """SELECT (SELECT COUNT(*) FROM shop_order WHERE cust_id = %s)
                   + (SELECT COUNT(*) FROM review WHERE cust_id = %s) AS n"""
     if run_query(sql, (cust_id, cust_id))[0]["n"]:
@@ -86,8 +92,9 @@ def delete_customer(cust_id):
     return run_command("DELETE FROM customer WHERE cust_id = %s", (cust_id,))
 
 
-# ---------- สินค้า (product) ----------
+# ---------- 3. สินค้า (product) ----------
 def search_products(filters):
+    """ค้นหาสินค้าตามชื่อ / หมวดหมู่"""
     sql = "SELECT * FROM product WHERE 1=1"
     params = []
     if filters.get("name"):
@@ -101,11 +108,13 @@ def search_products(filters):
 
 
 def get_product(product_id):
+    """ดึงสินค้า 1 รายการตามรหัส"""
     rows = run_query("SELECT * FROM product WHERE product_id = %s", (product_id,))
     return rows[0] if rows else None
 
 
 def create_product(data):
+    """เพิ่มสินค้าใหม่"""
     sql = """INSERT INTO product (name, category, price, stock)
              VALUES (%s, %s, %s, %s)"""
     return run_command(sql, (data["name"], blank_to_none(data.get("category")),
@@ -113,6 +122,7 @@ def create_product(data):
 
 
 def update_product(product_id, data):
+    """แก้ไขข้อมูลสินค้า"""
     sql = """UPDATE product SET name = %s, category = %s, price = %s, stock = %s
              WHERE product_id = %s"""
     return run_command(sql, (data["name"], blank_to_none(data.get("category")),
@@ -120,6 +130,8 @@ def update_product(product_id, data):
 
 
 def delete_product(product_id):
+    """ลบสินค้า (ลบไม่ได้ถ้าอยู่ในออเดอร์หรือรีวิว)"""
+    # อยู่ในออเดอร์หรือรีวิวแล้ว ลบไม่ได้
     sql = """SELECT (SELECT COUNT(*) FROM order_line WHERE product_id = %s)
                   + (SELECT COUNT(*) FROM review WHERE product_id = %s) AS n"""
     if run_query(sql, (product_id, product_id))[0]["n"]:
@@ -127,9 +139,11 @@ def delete_product(product_id):
     return run_command("DELETE FROM product WHERE product_id = %s", (product_id,))
 
 
-# ---------- ออเดอร์ (shop_order) ----------
+# ---------- 4. ออเดอร์ (shop_order) ----------
 def search_orders(filters):
-    # CAST AS CHAR ให้วันที่เป็น 'YYYY-MM-DD' ที่ <input type=date> อ่านได้
+    """ค้นหาออเดอร์ตามรหัสลูกค้า / สถานะ พร้อมชื่อลูกค้าและยอดรวม"""
+    # JOIN customer = แสดงชื่อลูกค้า · total คำนวณจาก order_line (ไม่เก็บในตาราง)
+    # LEFT JOIN = ออเดอร์ที่ยังไม่มีสินค้าก็แสดง (total = 0) · CAST = วันที่เป็น 'YYYY-MM-DD'
     sql = """SELECT o.order_id, o.cust_id, c.name AS customer_name,
                     CAST(o.order_date AS CHAR) AS order_date,
                     o.status, IFNULL(t.total, 0) AS total
@@ -150,6 +164,7 @@ def search_orders(filters):
 
 
 def get_order(order_id):
+    """ดึงออเดอร์ 1 รายการตามรหัส"""
     sql = """SELECT order_id, cust_id, CAST(order_date AS CHAR) AS order_date, status
              FROM shop_order WHERE order_id = %s"""
     rows = run_query(sql, (order_id,))
@@ -157,24 +172,27 @@ def get_order(order_id):
 
 
 def _is_paid(order_id):
+    """ออเดอร์นี้จ่ายเงินแล้วหรือยัง (จ่ายแล้ว = มีแถวใน payment)"""
     sql = "SELECT EXISTS (SELECT 1 FROM payment WHERE order_id = %s) AS paid"
     return bool(run_query(sql, (order_id,))[0]["paid"])
 
 
 def check_can_ship(order_id):
-    """จัดส่งได้เฉพาะออเดอร์ที่มีแถวใน payment"""
+    """จัดส่งได้เฉพาะออเดอร์ที่จ่ายแล้ว"""
     if not _is_paid(order_id):
         raise ValueError("ออเดอร์นี้ยังไม่ได้ชำระเงิน จัดส่งไม่ได้")
 
 
 def create_order(data):
-    if data["status"] == "shipped":
+    """เพิ่มออเดอร์ใหม่ (ตั้งเป็น shipped ตั้งแต่แรกไม่ได้)"""
+    if data["status"] == "shipped":     # ออเดอร์ใหม่ยังไม่จ่าย
         raise ValueError("ออเดอร์ใหม่ยังไม่ได้ชำระเงิน จัดส่งไม่ได้")
     sql = "INSERT INTO shop_order (cust_id, order_date, status) VALUES (%s, %s, %s)"
     return run_command(sql, (data["cust_id"], data["order_date"], data["status"]))
 
 
 def update_order(order_id, data):
+    """แก้ไขออเดอร์ (ถ้าเปลี่ยนเป็น shipped ต้องจ่ายเงินแล้ว)"""
     if data["status"] == "shipped":
         check_can_ship(order_id)
     sql = "UPDATE shop_order SET cust_id = %s, order_date = %s, status = %s WHERE order_id = %s"
@@ -182,16 +200,17 @@ def update_order(order_id, data):
 
 
 def delete_order(order_id):
+    """ลบออเดอร์พร้อมรายการสินค้า (ลบไม่ได้ถ้าจ่ายเงินแล้ว)"""
     if _is_paid(order_id):
         raise ValueError("ออเดอร์นี้ชำระเงินแล้ว ลบไม่ได้")
+    # ลบตารางลูกก่อนตารางแม่ (ไม่งั้นติด FK)
     run_command("DELETE FROM order_line WHERE order_id = %s", (order_id,))
     return run_command("DELETE FROM shop_order WHERE order_id = %s", (order_id,))
 
 
-# ============================================================
-#  REPORT (รายงาน — ใช้ JOIN + GROUP BY + subquery)
-# ============================================================
+# ---------- 5. รายงาน ----------
 def report_summary():
+    """การ์ดสรุป: 1 คอลัมน์ = 1 การ์ด"""
     sql = """SELECT
                (SELECT COUNT(*) FROM customer)   AS 'ลูกค้า',
                (SELECT COUNT(*) FROM product)    AS 'สินค้า',
@@ -203,8 +222,7 @@ def report_summary():
 
 
 def report_best_selling():
-    # JOIN 3 ตาราง: order_line -> product (ชื่อสินค้า) และ order_line -> shop_order (ตรวจสถานะ)
-    # นับเฉพาะออเดอร์ที่ไม่ถูกยกเลิก เพราะออเดอร์ที่ยกเลิกไม่ถือว่าขายได้
+    """สินค้าขายดี 5 อันดับ: JOIN order_line + product + shop_order, GROUP BY, SUM (ไม่นับออเดอร์ที่ยกเลิก)"""
     sql = """SELECT p.name AS 'สินค้า', p.category AS 'หมวดหมู่',
                     SUM(ol.qty) AS 'จำนวนที่ขายได้'
              FROM order_line ol
@@ -218,7 +236,8 @@ def report_best_selling():
 
 
 def report_customers_above_avg():
-    # subquery: ยอดรวมต่อลูกค้าแต่ละคนก่อน แล้วค่อย AVG ของยอดเหล่านั้น
+    """ลูกค้าที่ยอดซื้อมากกว่าค่าเฉลี่ย: JOIN customer + shop_order + order_line, HAVING + subquery AVG
+    subquery หายอดรวมต่อลูกค้าก่อน แล้วค่อยเฉลี่ยยอดเหล่านั้น (ไม่นับออเดอร์ที่ยกเลิก)"""
     sql = """SELECT c.name AS 'ลูกค้า', c.tier AS 'ระดับ',
                     SUM(ol.qty * ol.unit_price) AS 'ยอดซื้อรวม'
              FROM customer c
@@ -238,8 +257,8 @@ def report_customers_above_avg():
 
 
 def report_high_rated():
-    # JOIN 3 ตาราง: review -> product (ชื่อสินค้า) และ review -> customer (นับจำนวนผู้รีวิว)
-    # WHERE กรองก่อนจัดกลุ่ม / HAVING กรองหลังจัดกลุ่ม (คะแนนเฉลี่ยต้อง >= 4)
+    """สินค้าที่คะแนนเฉลี่ย >= 4: JOIN review + product + customer, GROUP BY, AVG, HAVING
+    (WHERE กรองก่อนจัดกลุ่ม · HAVING กรองหลังคำนวณ AVG)"""
     sql = """SELECT p.name AS 'สินค้า', ROUND(AVG(r.rating), 2) AS 'คะแนนเฉลี่ย',
                     COUNT(DISTINCT c.cust_id) AS 'จำนวนผู้รีวิว'
              FROM review r
@@ -251,9 +270,7 @@ def report_high_rated():
     return run_query(sql)
 
 
-# ============================================================
-#  รายการรายงานที่แสดงบนหน้า /report  (ต้องอยู่ท้ายไฟล์)
-# ============================================================
+# ---------- 6. รายการรายงานบนหน้า /report (ต้องอยู่ท้ายไฟล์) ----------
 REPORTS = [
     ("best-selling",  "📈 สินค้าขายดี (Best Sellers)",                    report_best_selling),
     ("top-customers", "🏅 ลูกค้าที่ซื้อมากกว่าค่าเฉลี่ย (Above Average)", report_customers_above_avg),

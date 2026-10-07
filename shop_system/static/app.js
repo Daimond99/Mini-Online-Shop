@@ -1,258 +1,269 @@
-// ============================================================
-//  app.js  —  ตรรกะหน้าเว็บ (ทำให้เสร็จแล้ว ★ นิสิตไม่ต้องแก้)
-//  ปรับช่องค้นหา/ฟอร์มได้ที่ตัวแปร ENTITIES ด้านล่าง
-// ============================================================
-// ★ ตัวอย่าง dropdown ที่อ่านข้อมูลจากฐานข้อมูล: ฟอร์ม "ออเดอร์" ช่อง cust_id
-//   แสดง name แต่ส่งค่าเป็น cust_id (อ่านรายการจาก /api/customers)
-//   ช่อง FK อื่น ๆ ทำแบบเดียวกันได้ — เปลี่ยน "type": "number" เป็น select + optionsFrom
+// app.js — หน้าจัดการข้อมูล (ลูกค้า / สินค้า / ออเดอร์)
+// ส่วนที่ 1: ตั้งค่าแท็บ  ส่วนที่ 2: ฟังก์ชัน  ส่วนที่ 3: ผูกปุ่ม
+// คุยกับหลังบ้านผ่าน API ใน app.py เช่น GET /api/customers?name=สม, POST /api/customers
+
+// ---------- 1) ตั้งค่าแต่ละแท็บ (key = ชื่อคอลัมน์ใน DB, "" ใน options = ทั้งหมด) ----------
+const TIERS = ["regular", "silver", "gold"];
+const STATUSES = ["pending", "paid", "shipped", "completed", "cancelled"];
+
 const ENTITIES = {
-  "customers": {
-    "label": "ลูกค้า",
-    "api": "/api/customers",
-    "idKey": "cust_id",
-    "search": [
-      {
-        "key": "name",
-        "label": "ชื่อ",
-        "type": "text"
-      },
-      {
-        "key": "email",
-        "label": "อีเมล",
-        "type": "text"
-      },
-      {
-        "key": "tier",
-        "label": "ระดับ",
-        "type": "select",
-        "options": [
-          "",
-          "regular",
-          "silver",
-          "gold"
-        ]
-      }
+  customers: {
+    label: "ลูกค้า",
+    api: "/api/customers",
+    idKey: "cust_id",
+    search: [
+      { key: "name",  label: "ชื่อ",   type: "text" },
+      { key: "email", label: "อีเมล",  type: "text" },
+      { key: "tier",  label: "ระดับ",  type: "select", options: ["", ...TIERS] },
     ],
-    "form": [
-      {
-        "key": "name",
-        "label": "ชื่อ",
-        "type": "text"
-      },
-      {
-        "key": "email",
-        "label": "อีเมล",
-        "type": "text"
-      },
-      {
-        "key": "address",
-        "label": "ที่อยู่",
-        "type": "text"
-      },
-      {
-        "key": "tier",
-        "label": "ระดับ",
-        "type": "select",
-        "options": [
-          "regular",
-          "silver",
-          "gold"
-        ]
-      }
-    ]
+    form: [
+      { key: "name",    label: "ชื่อ",    type: "text" },
+      { key: "email",   label: "อีเมล",   type: "text" },
+      { key: "address", label: "ที่อยู่",  type: "text" },
+      { key: "tier",    label: "ระดับ",   type: "select", options: TIERS },
+    ],
   },
-  "products": {
-    "label": "สินค้า",
-    "api": "/api/products",
-    "idKey": "product_id",
-    "search": [
-      {
-        "key": "name",
-        "label": "ชื่อสินค้า",
-        "type": "text"
-      },
-      {
-        "key": "category",
-        "label": "หมวดหมู่",
-        "type": "text"
-      }
+
+  products: {
+    label: "สินค้า",
+    api: "/api/products",
+    idKey: "product_id",
+    search: [
+      { key: "name",     label: "ชื่อสินค้า", type: "text" },
+      { key: "category", label: "หมวดหมู่",  type: "text" },
     ],
-    "form": [
-      {
-        "key": "name",
-        "label": "ชื่อสินค้า",
-        "type": "text"
-      },
-      {
-        "key": "category",
-        "label": "หมวดหมู่",
-        "type": "text"
-      },
-      {
-        "key": "price",
-        "label": "ราคา",
-        "type": "number"
-      },
-      {
-        "key": "stock",
-        "label": "สต็อก",
-        "type": "number"
-      }
-    ]
+    form: [
+      { key: "name",     label: "ชื่อสินค้า", type: "text" },
+      { key: "category", label: "หมวดหมู่",  type: "text" },
+      { key: "price",    label: "ราคา",      type: "number" },
+      { key: "stock",    label: "สต็อก",     type: "number" },
+    ],
   },
-  "orders": {
-    "label": "ออเดอร์",
-    "api": "/api/orders",
-    "idKey": "order_id",
-    "search": [
-      {
-        "key": "cust_id",
-        "label": "รหัสลูกค้า",
-        "type": "number"
-      },
-      {
-        "key": "status",
-        "label": "สถานะ",
-        "type": "select",
-        "options": [
-          "",
-          "pending",
-          "paid",
-          "shipped",
-          "completed",
-          "cancelled"
-        ]
-      }
+
+  orders: {
+    label: "ออเดอร์",
+    api: "/api/orders",
+    idKey: "order_id",
+    search: [
+      { key: "cust_id", label: "รหัสลูกค้า", type: "number" },
+      { key: "status",  label: "สถานะ",     type: "select", options: ["", ...STATUSES] },
     ],
-    "form": [
-      {
-        "key": "cust_id",
-        "label": "ลูกค้า",
-        "type": "select",
-        "optionsFrom": {
-          "api": "/api/customers",
-          "value": "cust_id",
-          "label": "name"
-        }
-      },
-      {
-        "key": "order_date",
-        "label": "วันที่สั่ง",
-        "type": "date"
-      },
-      {
-        "key": "status",
-        "label": "สถานะ",
-        "type": "select",
-        "options": [
-          "pending",
-          "paid",
-          "shipped",
-          "completed",
-          "cancelled"
-        ]
-      }
-    ]
-  }
+    form: [
+      // dropdown ลูกค้า: ดึงรายชื่อจาก /api/customers แสดง name ส่งค่า cust_id
+      { key: "cust_id",    label: "ลูกค้า",   type: "select",
+        optionsFrom: { api: "/api/customers", value: "cust_id", label: "name" } },
+      { key: "order_date", label: "วันที่สั่ง", type: "date" },
+      { key: "status",     label: "สถานะ",    type: "select", options: STATUSES },
+    ],
+  },
 };
 
-let current = Object.keys(ENTITIES)[0];
-let editingId = null;
-const $ = (s) => document.querySelector(s);
-function setStatus(el, msg, cls = "") { el.className = "status " + cls; el.textContent = msg; }
-async function api(url, opts) { const res = await fetch(url, opts); return res.json(); }
 
-function fieldHtml(f, prefix, value = "") {
-  if (f.type === "heading") return '<div class="form-section">' + f.label + '</div>';
-  let input;
-  if (f.type === "select") {
-    // options เป็นข้อความ "a" หรือ {value, label} ก็ได้
-    input = '<select id="' + prefix + f.key + '">' +
-      f.options.map(o => {
-        const v = typeof o === "object" ? o.value : o;
-        const t = typeof o === "object" ? o.label : (o || "ทั้งหมด");
-        return '<option value="' + v + '"' + (String(v) === String(value ?? "") ? " selected" : "") + '>' + t + '</option>';
-      }).join("") + '</select>';
-  } else { input = '<input id="' + prefix + f.key + '" type="' + f.type + '" value="' + (value ?? "") + '">'; }
-  return '<div class="field"><label>' + f.label + '</label>' + input + '</div>';
+// ---------- 2) ฟังก์ชัน ----------
+let currentTab = "customers";
+let editingId = null;             // null = กำลังเพิ่มใหม่
+
+function $(selector) {
+  return document.querySelector(selector);
 }
-// ช่อง select ที่มี optionsFrom → ดึงตัวเลือกจาก API (เช่น รายชื่อหมวดหมู่จากฐานข้อมูล)
-async function loadOptions(fields, forSearch) {
-  for (const f of fields.filter(f => f.optionsFrom)) {
-    const src = f.optionsFrom, r = await api(src.api);
-    f.options = r.ok ? (r.data || []).map(row => ({ value: row[src.value], label: row[src.label] }))
-                     : [{ value: "", label: (r.todo ? "🚧 " : "⚠️ ") + r.error }];
-    if (forSearch && r.ok) f.options.unshift({ value: "", label: "ทั้งหมด" });
+
+// ส่งคำขอไปหลังบ้าน คืน {ok, data} หรือ {ok, error}
+async function callApi(url, method = "GET", body = null) {
+  const options = { method: method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
+  const response = await fetch(url, options);
+  return await response.json();
+}
+
+
+// สร้างช่องกรอก 1 ช่อง (idPrefix: "s_" = ช่องค้นหา, "f_" = ฟอร์ม)
+function makeFieldHtml(field, idPrefix, value = "") {
+  const id = idPrefix + field.key;
+  let input;
+
+  if (field.type === "select") {
+    let optionsHtml = "";
+    for (const option of field.options) {
+      const optionValue = typeof option === "object" ? option.value : option;
+      const optionLabel = typeof option === "object" ? option.label : (option || "ทั้งหมด");
+      const selected = String(optionValue) === String(value) ? "selected" : "";
+      optionsHtml += `<option value="${optionValue}" ${selected}>${optionLabel}</option>`;
+    }
+    input = `<select id="${id}">${optionsHtml}</select>`;
+  } else {
+    input = `<input id="${id}" type="${field.type}" value="${value ?? ""}">`;
+  }
+
+  return `<div class="field"><label>${field.label}</label>${input}</div>`;
+}
+
+// ช่องที่มี optionsFrom: ดึงตัวเลือกจากหลังบ้าน
+async function loadOptionsFromApi(fields) {
+  for (const field of fields) {
+    if (!field.optionsFrom) continue;
+    const source = field.optionsFrom;
+    const result = await callApi(source.api);
+    field.options = result.data.map(row => ({ value: row[source.value], label: row[source.label] }));
   }
 }
-// ช่องในฟอร์มที่ใช้อยู่ตอนนี้ (ช่อง editOnly แสดงเฉพาะตอนแก้ไข)
-function formFields() { return ENTITIES[current].form.filter(f => !f.editOnly || editingId !== null); }
-async function buildSearch() {
-  const cfg = ENTITIES[current];
-  await loadOptions(cfg.search, true);
-  if (cfg !== ENTITIES[current]) return;   // ผู้ใช้เปลี่ยนแท็บระหว่างรอ
-  $("#searchTitle").textContent = cfg.label;
-  $("#searchFields").innerHTML = cfg.search.map(f => fieldHtml(f, "s_")).join("");
+
+// วาดช่องค้นหาของแท็บที่เปิดอยู่
+function showSearchBox() {
+  const entity = ENTITIES[currentTab];
+  let html = "";
+  for (const field of entity.search) {
+    html += makeFieldHtml(field, "s_");
+  }
+  $("#searchTitle").textContent = entity.label;
+  $("#searchFields").innerHTML = html;
 }
-async function doSearch() {
-  const cfg = ENTITIES[current];
+
+
+// อ่านค่าจากช่องค้นหา ส่งไปหลังบ้าน แล้วแสดงผลเป็นตาราง
+async function search() {
+  const entity = ENTITIES[currentTab];
+
+  // รวมค่าช่องที่กรอกเป็น ?name=สม&tier=gold
   const params = new URLSearchParams();
-  cfg.search.forEach(f => { const v = $("#s_" + f.key).value; if (v) params.append(f.key, v); });
-  setStatus($("#status"), "กำลังค้นหา...");
-  renderTable(await api(cfg.api + "?" + params.toString()));
+  for (const field of entity.search) {
+    const value = $("#s_" + field.key).value;
+    if (value) params.append(field.key, value);
+  }
+
+  $("#status").textContent = "กำลังค้นหา...";
+  const result = await callApi(entity.api + "?" + params.toString());
+  showTable(result);
 }
-function renderTable(r) {
-  const head = $("#tableHead"), body = $("#tableBody"), st = $("#status");
-  head.innerHTML = ""; body.innerHTML = "";
-  if (!r.ok) { setStatus(st, (r.todo ? "🚧 " : "⚠️ ") + r.error, r.todo ? "todo" : "err"); return; }
-  const rows = r.data || [];
-  if (rows.length === 0) { setStatus(st, "ไม่พบข้อมูล"); return; }
-  setStatus(st, "พบ " + rows.length + " รายการ");
-  const cols = Object.keys(rows[0]);
-  head.innerHTML = cols.map(c => "<th>" + c + "</th>").join("") + "<th>จัดการ</th>";
-  body.innerHTML = rows.map(row => {
-    const id = row[ENTITIES[current].idKey];
-    return "<tr>" + cols.map(c => "<td>" + (row[c] ?? "—") + "</td>").join("") +
-      '<td><button class="btn sm" onclick="editRow(' + id + ')">แก้ไข</button> ' +
-      '<button class="btn sm del" onclick="deleteRow(' + id + ')">ลบ</button></td></tr>';
-  }).join("");
+
+// วาดตารางผลลัพธ์ พร้อมปุ่มแก้ไข/ลบของแต่ละแถว
+function showTable(result) {
+  const entity = ENTITIES[currentTab];
+  $("#tableHead").innerHTML = "";
+  $("#tableBody").innerHTML = "";
+
+  if (!result.ok) {
+    $("#status").className = "status err";
+    $("#status").textContent = "⚠️ " + result.error;
+    return;
+  }
+  $("#status").className = "status";
+
+  const rows = result.data;
+  if (rows.length === 0) {
+    $("#status").textContent = "ไม่พบข้อมูล";
+    return;
+  }
+  $("#status").textContent = "พบ " + rows.length + " รายการ";
+
+  const columns = Object.keys(rows[0]);
+  let headHtml = "";
+  for (const column of columns) {
+    headHtml += `<th>${column}</th>`;
+  }
+  $("#tableHead").innerHTML = headHtml + "<th>จัดการ</th>";
+
+  let bodyHtml = "";
+  for (const row of rows) {
+    const id = row[entity.idKey];
+    bodyHtml += "<tr>";
+    for (const column of columns) {
+      bodyHtml += `<td>${row[column] ?? "—"}</td>`;     // NULL แสดงเป็น —
+    }
+    bodyHtml += `<td>
+        <button class="btn sm" onclick="editRow(${id})">แก้ไข</button>
+        <button class="btn sm del" onclick="deleteRow(${id})">ลบ</button>
+      </td></tr>`;
+  }
+  $("#tableBody").innerHTML = bodyHtml;
 }
+
+
+// เปิดฟอร์ม (ตอนแก้ไขจะใส่ค่าเดิมลงในช่อง)
 async function openForm(title, data = {}) {
-  await loadOptions(formFields(), false);
+  const fields = ENTITIES[currentTab].form;
+  await loadOptionsFromApi(fields);
+
+  let html = "";
+  for (const field of fields) {
+    html += makeFieldHtml(field, "f_", data[field.key]);
+  }
   $("#modalTitle").textContent = title;
-  $("#formFields").innerHTML = formFields().map(f => fieldHtml(f, "f_", data[f.key])).join("");
+  $("#formFields").innerHTML = html;
   $("#modal").classList.remove("hidden");
 }
-function collectForm() { const d = {}; formFields().filter(f => f.key).forEach(f => d[f.key] = $("#f_" + f.key).value); return d; }
-async function editRow(id) {
-  const cfg = ENTITIES[current];
-  const r = await api(cfg.api + "/" + id);
-  if (!r.ok) { alert((r.todo ? "🚧 " : "⚠️ ") + r.error); return; }
-  editingId = id; openForm("แก้ไขข้อมูล", r.data);
+
+// อ่านค่าทุกช่องในฟอร์มเป็นข้อมูลก้อนเดียว เช่น {name: "...", tier: "..."}
+function readForm() {
+  const data = {};
+  for (const field of ENTITIES[currentTab].form) {
+    data[field.key] = $("#f_" + field.key).value;
+  }
+  return data;
 }
+
+// กดบันทึก: เพิ่มใหม่ (POST) หรือแก้ไข (PUT) แล้วโหลดตารางใหม่
+async function saveForm() {
+  const entity = ENTITIES[currentTab];
+  const data = readForm();
+
+  let result;
+  if (editingId === null) {
+    result = await callApi(entity.api, "POST", data);
+  } else {
+    result = await callApi(entity.api + "/" + editingId, "PUT", data);
+  }
+
+  if (!result.ok) {
+    alert("⚠️ " + result.error);
+    return;
+  }
+  $("#modal").classList.add("hidden");
+  search();
+}
+
+// กดแก้ไข: ดึงข้อมูลเดิมของแถวนั้นมาเปิดฟอร์ม
+async function editRow(id) {
+  const entity = ENTITIES[currentTab];
+  const result = await callApi(entity.api + "/" + id);
+  if (!result.ok) {
+    alert("⚠️ " + result.error);
+    return;
+  }
+  editingId = id;
+  openForm("แก้ไขข้อมูล", result.data);
+}
+
+// กดลบ: ถามยืนยันก่อน แล้วลบ
 async function deleteRow(id) {
   if (!confirm("ยืนยันการลบ?")) return;
-  const r = await api(ENTITIES[current].api + "/" + id, { method: "DELETE" });
-  if (!r.ok) { alert((r.todo ? "🚧 " : "⚠️ ") + r.error); return; }
-  doSearch();
+
+  const result = await callApi(ENTITIES[currentTab].api + "/" + id, "DELETE");
+  if (!result.ok) {
+    alert("⚠️ " + result.error);
+    return;
+  }
+  search();
 }
-async function save() {
-  const cfg = ENTITIES[current], data = collectForm();
-  const opts = { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) };
-  const r = await api(editingId ? cfg.api + "/" + editingId : cfg.api, opts);
-  if (!r.ok) { alert((r.todo ? "🚧 " : "⚠️ ") + r.error); return; }
-  $("#modal").classList.add("hidden"); doSearch();
+
+
+// ---------- 3) ผูกปุ่ม ----------
+for (const tab of document.querySelectorAll(".tab")) {
+  tab.onclick = function () {
+    for (const other of document.querySelectorAll(".tab")) other.classList.remove("active");
+    tab.classList.add("active");
+    currentTab = tab.dataset.entity;
+    showSearchBox();
+    $("#tableHead").innerHTML = "";
+    $("#tableBody").innerHTML = "";
+    $("#status").textContent = 'กด "ค้นหา" เพื่อแสดงข้อมูล';
+  };
 }
-document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
-  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-  t.classList.add("active"); current = t.dataset.entity;
-  buildSearch(); $("#tableHead").innerHTML = ""; $("#tableBody").innerHTML = "";
-  setStatus($("#status"), 'กด "ค้นหา" เพื่อแสดงข้อมูล');
-}));
-$("#btnSearch").onclick = doSearch;
-$("#btnClear").onclick = () => buildSearch();
-$("#btnAdd").onclick = () => { editingId = null; openForm("เพิ่มข้อมูลใหม่"); };
-$("#btnSave").onclick = save;
-$("#btnCancel").onclick = () => $("#modal").classList.add("hidden");
-buildSearch();
-setStatus($("#status"), 'กด "ค้นหา" เพื่อแสดงข้อมูล');
+
+$("#btnSearch").onclick = search;
+$("#btnClear").onclick = showSearchBox;
+$("#btnAdd").onclick = function () { editingId = null; openForm("เพิ่มข้อมูลใหม่"); };
+$("#btnSave").onclick = saveForm;
+$("#btnCancel").onclick = function () { $("#modal").classList.add("hidden"); };
+
+showSearchBox();
+$("#status").textContent = 'กด "ค้นหา" เพื่อแสดงข้อมูล';

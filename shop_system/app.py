@@ -1,135 +1,137 @@
-# ============================================================
-#  app.py — เว็บแอป Flask (ทำให้เสร็จแล้ว ★ ปกติไม่ต้องแก้)
-#  รัน:  python app.py  แล้วเปิด http://127.0.0.1:5000
-#  ★ เพิ่มรายงานใหม่ไม่ต้องแก้ไฟล์นี้ — ไปเพิ่มที่ REPORTS ท้าย db.py
-# ============================================================
-from datetime import date, datetime
+# app.py — รับคำขอจากหน้าเว็บแล้วส่งต่อให้ db.py (ไฟล์นี้ไม่มี SQL)
+# รัน: python app.py แล้วเปิด http://127.0.0.1:5000
 from flask import Flask, request, jsonify, render_template
-from flask.json.provider import DefaultJSONProvider
 import db
 
-
-class JSONProvider(DefaultJSONProvider):
-    """- ส่งวันที่เป็นรูปแบบ YYYY-MM-DD ให้ช่อง <input type="date"> ในฟอร์มอ่านได้
-       - ไม่เรียงชื่อคอลัมน์ใหม่ → หัวตารางเรียงตามลำดับใน SELECT"""
-    sort_keys = False
-
-    @staticmethod
-    def default(o):
-        if isinstance(o, (date, datetime)):
-            return o.isoformat()
-        return DefaultJSONProvider.default(o)
-
-
 app = Flask(__name__)
-app.json = JSONProvider(app)
+app.json.sort_keys = False      # ให้หัวตารางเรียงตามลำดับใน SELECT
 
 
-def safe(fn, *args, **kwargs):
+def reply(function, *args):
+    """เรียกฟังก์ชันใน db.py แล้วตอบเป็น JSON: {"ok": true, "data": ...} หรือ {"ok": false, "error": ...}"""
     try:
-        return jsonify({"ok": True, "data": fn(*args, **kwargs)})
-    except NotImplementedError as e:
-        return jsonify({"ok": False, "todo": True, "error": str(e)}), 501
-    except ValueError as e:
-        # ข้อผิดพลาดที่ db.py ตั้งใจแจ้งผู้ใช้ เช่น raise ValueError("คลาสนี้เต็มแล้ว")
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return jsonify({"ok": True, "data": function(*args)})
     except Exception as e:
-        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
+        return jsonify({"ok": False, "error": str(e)}), 400
 
 
+def get_filters():
+    """เงื่อนไขค้นหาจาก URL (?name=สม&tier=gold) เอาเฉพาะช่องที่กรอก"""
+    return {key: value for key, value in request.args.items() if value}
+
+
+# ---------- หน้าเว็บ ----------
 @app.route("/")
-def page_home():
+def home_page():
+    """หน้าจัดการข้อมูล"""
     return render_template("index.html")
 
 @app.route("/report")
-def page_report():
+def report_page():
+    """หน้ารายงาน"""
     return render_template("report.html")
 
 
-# ---- ลูกค้า ----
+# ---------- ลูกค้า ----------
 @app.route("/api/customers", methods=["GET"])
-def customers_list():
-    filters = {k: v for k, v in request.args.items() if v}
-    return safe(db.search_customers, filters)
+def customers_search():
+    """ค้นหาลูกค้า"""
+    return reply(db.search_customers, get_filters())
 
-@app.route("/api/customers/<int:_id>", methods=["GET"])
-def customer_get(_id):
-    return safe(db.get_customer, _id)
+@app.route("/api/customers/<int:id>", methods=["GET"])
+def customers_get(id):
+    """ดึงลูกค้า 1 คน"""
+    return reply(db.get_customer, id)
 
 @app.route("/api/customers", methods=["POST"])
-def customer_create():
-    return safe(db.create_customer, request.json)
+def customers_create():
+    """เพิ่มลูกค้า"""
+    return reply(db.create_customer, request.json)
 
-@app.route("/api/customers/<int:_id>", methods=["PUT"])
-def customer_update(_id):
-    return safe(db.update_customer, _id, request.json)
+@app.route("/api/customers/<int:id>", methods=["PUT"])
+def customers_update(id):
+    """แก้ไขลูกค้า"""
+    return reply(db.update_customer, id, request.json)
 
-@app.route("/api/customers/<int:_id>", methods=["DELETE"])
-def customer_delete(_id):
-    return safe(db.delete_customer, _id)
+@app.route("/api/customers/<int:id>", methods=["DELETE"])
+def customers_delete(id):
+    """ลบลูกค้า"""
+    return reply(db.delete_customer, id)
 
-# ---- สินค้า ----
+
+# ---------- สินค้า ----------
 @app.route("/api/products", methods=["GET"])
-def products_list():
-    filters = {k: v for k, v in request.args.items() if v}
-    return safe(db.search_products, filters)
+def products_search():
+    """ค้นหาสินค้า"""
+    return reply(db.search_products, get_filters())
 
-@app.route("/api/products/<int:_id>", methods=["GET"])
-def product_get(_id):
-    return safe(db.get_product, _id)
+@app.route("/api/products/<int:id>", methods=["GET"])
+def products_get(id):
+    """ดึงสินค้า 1 รายการ"""
+    return reply(db.get_product, id)
 
 @app.route("/api/products", methods=["POST"])
-def product_create():
-    return safe(db.create_product, request.json)
+def products_create():
+    """เพิ่มสินค้า"""
+    return reply(db.create_product, request.json)
 
-@app.route("/api/products/<int:_id>", methods=["PUT"])
-def product_update(_id):
-    return safe(db.update_product, _id, request.json)
+@app.route("/api/products/<int:id>", methods=["PUT"])
+def products_update(id):
+    """แก้ไขสินค้า"""
+    return reply(db.update_product, id, request.json)
 
-@app.route("/api/products/<int:_id>", methods=["DELETE"])
-def product_delete(_id):
-    return safe(db.delete_product, _id)
+@app.route("/api/products/<int:id>", methods=["DELETE"])
+def products_delete(id):
+    """ลบสินค้า"""
+    return reply(db.delete_product, id)
 
-# ---- ออเดอร์ ----
+
+# ---------- ออเดอร์ ----------
 @app.route("/api/orders", methods=["GET"])
-def orders_list():
-    filters = {k: v for k, v in request.args.items() if v}
-    return safe(db.search_orders, filters)
+def orders_search():
+    """ค้นหาออเดอร์"""
+    return reply(db.search_orders, get_filters())
 
-@app.route("/api/orders/<int:_id>", methods=["GET"])
-def order_get(_id):
-    return safe(db.get_order, _id)
+@app.route("/api/orders/<int:id>", methods=["GET"])
+def orders_get(id):
+    """ดึงออเดอร์ 1 รายการ"""
+    return reply(db.get_order, id)
 
 @app.route("/api/orders", methods=["POST"])
-def order_create():
-    return safe(db.create_order, request.json)
+def orders_create():
+    """เพิ่มออเดอร์"""
+    return reply(db.create_order, request.json)
 
-@app.route("/api/orders/<int:_id>", methods=["PUT"])
-def order_update(_id):
-    return safe(db.update_order, _id, request.json)
+@app.route("/api/orders/<int:id>", methods=["PUT"])
+def orders_update(id):
+    """แก้ไขออเดอร์"""
+    return reply(db.update_order, id, request.json)
 
-@app.route("/api/orders/<int:_id>", methods=["DELETE"])
-def order_delete(_id):
-    return safe(db.delete_order, _id)
+@app.route("/api/orders/<int:id>", methods=["DELETE"])
+def orders_delete(id):
+    """ลบออเดอร์"""
+    return reply(db.delete_order, id)
 
 
-# ---- รายงาน ----
+# ---------- รายงาน ----------
 @app.route("/api/reports/summary")
-def report_summary():
-    return safe(db.report_summary)
+def reports_summary():
+    """การ์ดตัวเลขสรุปบนหน้ารายงาน"""
+    return reply(db.report_summary)
 
 @app.route("/api/reports")
-def report_list():
-    """รายชื่อรายงานทั้งหมด (อ่านจาก db.REPORTS) ให้หน้าเว็บสร้างกล่องรายงาน"""
-    return jsonify({"ok": True, "data": [{"key": k, "title": t} for k, t, _ in db.REPORTS]})
+def reports_list():
+    """รายชื่อรายงานทั้งหมด (มาจาก REPORTS ท้ายไฟล์ db.py)"""
+    names = [{"key": key, "title": title} for key, title, function in db.REPORTS]
+    return jsonify({"ok": True, "data": names})
 
 @app.route("/api/reports/<key>")
-def report_run(key):
-    """รันรายงานตามชื่อ เช่น /api/reports/overdue"""
-    for k, _, fn in db.REPORTS:
-        if k == key:
-            return safe(fn)
-    return jsonify({"ok": False, "error": f"ไม่พบรายงาน '{key}' ใน db.REPORTS"}), 404
+def reports_run(key):
+    """รันรายงานตามชื่อ เช่น /api/reports/best-selling"""
+    for report_key, title, function in db.REPORTS:
+        if report_key == key:
+            return reply(function)
+    return jsonify({"ok": False, "error": "ไม่พบรายงานนี้"}), 404
 
 
 if __name__ == "__main__":
