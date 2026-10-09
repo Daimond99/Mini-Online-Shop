@@ -10,9 +10,14 @@
 ## โครงสร้างโปรเจกต์
 
 ```
-shop_system/    เว็บ: app.py (URL), db.py (SQL ทั้งหมด), config.py, templates/, static/
-database/       schema.sql (ตาราง + ข้อมูลตัวอย่าง), er-diagram.png
-docs/           เอกสารประกอบ
+shop_system/              เว็บ: app.py (URL), db.py (SQL ทั้งหมด), config.py, templates/, static/
+database/
+  sql/schema.sql          ตาราง + ข้อมูลตัวอย่าง
+  diagram/er-diagram.png  ER diagram
+docs/
+  guides/                 คู่มือรัน (run-guide.md)
+  requirements/           โจทย์ PDF + เกณฑ์คะแนน (grading-rubric.md)
+  planning/               แผนงาน (claude-code-plan.md)
 ```
 
 ## วิธีติดตั้ง
@@ -33,7 +38,7 @@ CREATE DATABASE project69 CHARACTER SET utf8mb4;
 USE project69;
 ```
 
-แล้วรันไฟล์ `database/schema.sql` ทั้งไฟล์ (สร้างตารางและใส่ข้อมูลตัวอย่าง)
+แล้วรันไฟล์ `database/sql/schema.sql` ทั้งไฟล์ (สร้างตารางและใส่ข้อมูลตัวอย่าง)
 
 **3. ตั้งค่าการเชื่อมต่อ**
 

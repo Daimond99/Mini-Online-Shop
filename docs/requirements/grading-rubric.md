@@ -108,7 +108,7 @@
 | รายการ | สถานะ |
 |---|---|
 | ER diagram (draw.io + DBeaver) | ✅ 6 เอนทิตี cardinality ครบ |
-| `schema.sql` | ✅ 6 ตาราง PK/FK ครบ มี `CHECK` ที่ rating (อยู่ที่ `database/schema.sql`) |
+| `schema.sql` | ✅ 6 ตาราง PK/FK ครบ มี `CHECK` ที่ rating (อยู่ที่ `database/sql/schema.sql`) |
 | sample data | ✅ ทุกตาราง ≥ 8 แถว + ออเดอร์ที่ยกเลิก 1 ใบ รันใน DBeaver สำเร็จ |
 | DBeaver ต่อ MySQL local | ✅ |
 | `config.py` / รันเว็บ | ✅ ค่าจริงอยู่ใน `config_local.py` เว็บรันได้ที่ http://127.0.0.1:5000 |

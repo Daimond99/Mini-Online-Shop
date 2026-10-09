@@ -37,11 +37,11 @@ python app.py
    ```sql
    CREATE DATABASE project69 CHARACTER SET utf8mb4;
    ```
-   จากนั้นเปิด `database/schema.sql` แล้วรันทั้งไฟล์ (`Alt+X`)
+   จากนั้นเปิด `database/sql/schema.sql` แล้วรันทั้งไฟล์ (`Alt+X`)
 
 **ใช้งานทั่วไป**
 - ดูข้อมูล: ขยาย `project69` → Tables → ดับเบิลคลิกตาราง → แท็บ Data
-- ดู ER diagram: คลิกขวาที่ `project69` → View Diagram (หรือเปิด `database/er-diagram.png`)
+- ดู ER diagram: คลิกขวาที่ `project69` → View Diagram (หรือเปิด `database/diagram/er-diagram.png`)
 - เช็คว่าเว็บกับ DBeaver เห็น DB ตัวเดียวกัน: เพิ่มข้อมูลในเว็บ แล้วกด `F5` ที่ตารางใน DBeaver ต้องเห็นแถวใหม่
 
 ## ตรวจว่าเว็บต่อ DB ถูกตัว
