@@ -52,7 +52,7 @@ python app.py
 SELECT @@hostname, @@port, DATABASE();
 ```
 
-ได้ `localhost` / `3306` / `project69` = ตรงกับที่ตั้งใน `shop_system/config_local.py`
+ได้ `localhost` / `3306` / `project69` = ตรงกับที่ตั้งใน `shop_system/config.py`
 
 ## ปัญหาที่พบบ่อย
 
@@ -61,9 +61,9 @@ SELECT @@hostname, @@port, DATABASE();
 | `No module named 'flask'` | `python -m pip install -r requirements.txt` (ใช้ Python ตัวเดียวกับที่รัน) |
 | `Address already in use` | มี server เก่าเปิดค้างที่ port 5000 ปิดตัวเก่าก่อน |
 | `Can't connect to MySQL server` | MySQL ยังไม่เปิด |
-| `Access denied for user` | รหัสผ่านใน `config_local.py` ไม่ตรงกับ MySQL |
+| `Access denied for user` | รหัสผ่านใน `config.py` ไม่ตรงกับ MySQL |
 | `Unknown database 'project69'` | ยังไม่ได้สร้าง DB (ดูขั้นตอนเชื่อม DBeaver ข้อ 3) |
 | แก้ `.js` / `.css` แล้วไม่เปลี่ยน | refresh เบราว์เซอร์ด้วย `Ctrl + F5` (แก้ `.py` ไม่ต้อง server โหลดใหม่เอง) |
 | แก้ข้อมูลใน DBeaver แล้วเว็บไม่เห็น | กด Save / Commit ใน DBeaver |
 
-ถ้าเปลี่ยนรหัสผ่าน MySQL ต้องแก้ทั้งใน DBeaver (Edit Connection) และ `shop_system/config_local.py`
+ถ้าเปลี่ยนรหัสผ่าน MySQL ต้องแก้ทั้งใน DBeaver (Edit Connection) และ `shop_system/config.py`

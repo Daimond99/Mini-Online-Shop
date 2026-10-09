@@ -40,18 +40,12 @@ USE project69;
 
 แล้วรันไฟล์ `database/sql/schema.sql` ทั้งไฟล์ (สร้างตารางและใส่ข้อมูลตัวอย่าง)
 
-**3. ตั้งค่าการเชื่อมต่อ**
-
-```bash
-cd shop_system
-copy config_example.py config_local.py
-```
-
-(macOS/Linux ใช้ `cp` แทน `copy`) แล้วเปิด `config_local.py` แก้ `DB_USER` และ `DB_PASSWORD` ให้ตรงกับ MySQL ของเครื่อง
+**3. ตั้งค่ารหัสผ่าน MySQL** — เปิด `shop_system/config.py` แก้ `DB_USER` และ `DB_PASSWORD` ให้ตรงกับ MySQL ของเครื่อง
 
 **4. รัน**
 
 ```bash
+cd shop_system
 pip install -r requirements.txt
 python app.py
 ```
