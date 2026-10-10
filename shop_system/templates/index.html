@@ -16,6 +16,7 @@
       <button class="tab active" data-entity="customers">ลูกค้า</button>
       <button class="tab" data-entity="products">สินค้า</button>
       <button class="tab" data-entity="orders">ออเดอร์</button>
+      <button class="tab" data-entity="reviews">รีวิว</button>
     </div>
     <section class="card">
       <h3>ค้นหา <span id="searchTitle"></span></h3>
@@ -38,6 +39,15 @@
       <div class="btn-row">
         <button class="btn primary" id="btnSave">บันทึก</button>
         <button class="btn" id="btnCancel">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+  <div id="orderModal" class="modal hidden">
+    <div class="modal-box wide">
+      <h3 id="orderTitle">ออเดอร์</h3>
+      <div id="orderBody"></div>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn primary" id="btnOrderClose">ปิด</button>
       </div>
     </div>
   </div>

@@ -113,6 +113,71 @@ def orders_delete(id):
     return reply(db.delete_order, id)
 
 
+@app.route("/api/orders/<int:id>/detail", methods=["GET"])
+def orders_detail(id):
+    """ออเดอร์ + รายการสินค้า + ยอดรวม + การชำระเงิน"""
+    return reply(db.get_order_detail, id)
+
+@app.route("/api/orders/<int:id>/lines", methods=["POST"])
+def order_lines_add(id):
+    """เพิ่มสินค้าเข้าออเดอร์"""
+    return reply(db.add_order_line, id, request.json)
+
+@app.route("/api/orders/<int:id>/lines/<int:product_id>", methods=["PUT"])
+def order_lines_update(id, product_id):
+    """แก้จำนวนสินค้าในออเดอร์"""
+    return reply(db.update_order_line, id, product_id, request.json)
+
+@app.route("/api/orders/<int:id>/lines/<int:product_id>", methods=["DELETE"])
+def order_lines_delete(id, product_id):
+    """เอาสินค้าออกจากออเดอร์"""
+    return reply(db.delete_order_line, id, product_id)
+
+
+# ---------- ชำระเงิน ----------
+@app.route("/api/orders/<int:id>/payment", methods=["POST"])
+def payment_create(id):
+    """บันทึกการชำระเงิน"""
+    return reply(db.create_payment, id, request.json)
+
+@app.route("/api/orders/<int:id>/payment", methods=["PUT"])
+def payment_update(id):
+    """แก้การชำระเงิน"""
+    return reply(db.update_payment, id, request.json)
+
+@app.route("/api/orders/<int:id>/payment", methods=["DELETE"])
+def payment_delete(id):
+    """ยกเลิกการชำระเงิน"""
+    return reply(db.delete_payment, id)
+
+
+# ---------- รีวิว ----------
+@app.route("/api/reviews", methods=["GET"])
+def reviews_search():
+    """ค้นหารีวิว"""
+    return reply(db.search_reviews, get_filters())
+
+@app.route("/api/reviews/<int:cust_id>/<int:product_id>", methods=["GET"])
+def reviews_get(cust_id, product_id):
+    """ดึงรีวิว 1 รายการ"""
+    return reply(db.get_review, cust_id, product_id)
+
+@app.route("/api/reviews", methods=["POST"])
+def reviews_create():
+    """เพิ่มรีวิว"""
+    return reply(db.create_review, request.json)
+
+@app.route("/api/reviews/<int:cust_id>/<int:product_id>", methods=["PUT"])
+def reviews_update(cust_id, product_id):
+    """แก้ไขรีวิว"""
+    return reply(db.update_review, cust_id, product_id, request.json)
+
+@app.route("/api/reviews/<int:cust_id>/<int:product_id>", methods=["DELETE"])
+def reviews_delete(cust_id, product_id):
+    """ลบรีวิว"""
+    return reply(db.delete_review, cust_id, product_id)
+
+
 # ---------- รายงาน ----------
 @app.route("/api/reports/summary")
 def reports_summary():

@@ -60,3 +60,11 @@ tr:nth-child(even) td{background:var(--tint)}
 .modal-box{background:#fff;border-radius:14px;padding:24px;width:440px;max-width:92vw;max-height:88vh;overflow:auto}
 .modal-box h3{margin-bottom:16px;color:var(--navy)}
 #formFields .field{margin-bottom:10px}
+
+.modal-box.wide{width:760px}
+.inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.inline-form select,.inline-form input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+.qty-input{width:80px}
+.line-table td .qty-input{padding:5px 8px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+.total-row{text-align:right;margin-top:10px;font-size:15px}
+.sub-title{margin-top:20px;color:var(--navy);font-size:15px}
