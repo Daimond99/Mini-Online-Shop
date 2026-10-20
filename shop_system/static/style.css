@@ -1,5 +1,5 @@
-:root{
-  --navy:#1B2A52; --navy2:#2A3F73; --coral:#EF5B4C; --gold:#F4B731;
+ :root{
+  --navy:#343438; --navy2:#343438; --coral:#EF5B4C; --gold:#F4B731;
   --ink:#1B2A52; --mute:#6A7798; --line:#DBE2F0; --tint:#F2F5FB; --green:#2FA968;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -22,20 +22,41 @@ body{font-family:"Segoe UI",Tahoma,sans-serif;background:#EEF2F8;color:var(--ink
 .tab{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 18px;
   font-size:14px;font-weight:600;color:var(--mute);cursor:pointer}
 .tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tab:hover {
+  background: #e0e0e4;
+  color: #222;
+}
+
+.tab.active:hover {
+  background: #202024;
+  border-color: #202024;
+  color: #fff;
+}
 
 .search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
 .field label{display:block;font-size:12px;color:var(--mute);margin-bottom:4px;font-weight:600}
 .field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);
   border-radius:8px;font-size:14px;font-family:inherit}
 .field input:focus,.field select:focus{outline:none;border-color:var(--navy2)}
+.field select:hover {
+  background: #e3e3e6;
+  border-color: #343438;
+}
 
 .btn-row{display:flex;gap:10px;flex-wrap:wrap}
 .btn{padding:9px 18px;border:1px solid var(--line);background:#fff;border-radius:8px;
   font-size:14px;font-weight:600;cursor:pointer;color:var(--ink)}
-.btn:hover{background:var(--tint)}
+.btn:hover{background:#adadb1}
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.primary:hover{background:var(--navy2)}
+.btn.primary:hover {
+  background: #202024;
+  border-color: #202024;
+}
 .btn.add{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.add:hover {
+  background: #157944;
+}
 .btn.del{color:var(--coral);border-color:#f3c4bf}
 .btn.sm{padding:5px 12px;font-size:12.5px}
 
@@ -59,4 +80,5 @@ tr:nth-child(even) td{background:var(--tint)}
 .modal.hidden{display:none}
 .modal-box{background:#fff;border-radius:14px;padding:24px;width:440px;max-width:92vw;max-height:88vh;overflow:auto}
 .modal-box h3{margin-bottom:16px;color:var(--navy)}
-#formFields .field{margin-bottom:10px}
+#formFields .field{margin-bottom:10px} 
+

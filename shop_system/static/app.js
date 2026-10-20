@@ -29,12 +29,16 @@ const ENTITIES = {
     api: "/api/products",
     idKey: "product_id",
     search: [
-      { key: "name",     label: "ชื่อสินค้า", type: "text" },
-      { key: "category", label: "หมวดหมู่",  type: "text" },
+      { key: "name",    label: "ชื่อสินค้า", type: "text" },
+      {key: "category", label: "หมวดหมู่", type: "select",
+      options: ["", "การ์ดจอ", "ซีพียู", "แรม", "เมนบอร์ด", "ฮาร์ดดิสก์", "พาวเวอร์ซัพพลาย", "เคสคอมพิวเตอร์", "SSD", "เมาส์เกมมิ่ง, คีย์บอร์ดเกมมิ่ง", "หูฟังเกมมิ่ง"]
+},
     ],
     form: [
-      { key: "name",     label: "ชื่อสินค้า", type: "text" },
-      { key: "category", label: "หมวดหมู่",  type: "text" },
+      { key: "name",    label: "ชื่อสินค้า", type: "text" },
+      {key: "category", label: "หมวดหมู่", type: "select",
+      options: [ {value: "" ,label: "เลือกหมวดหมู่",disabled: true }, "การ์ดจอ", "ซีพียู", "แรม", "เมนบอร์ด", "ฮาร์ดดิสก์", "พาวเวอร์ซัพพลาย", "เคสคอมพิวเตอร์", "SSD", "เมาส์เกมมิ่ง, คีย์บอร์ดเกมมิ่ง", "หูฟังเกมมิ่ง"]
+},
       { key: "price",    label: "ราคา",      type: "number" },
       { key: "stock",    label: "สต็อก",     type: "number" },
     ],
@@ -51,7 +55,7 @@ const ENTITIES = {
     form: [
       // dropdown ลูกค้า: ดึงรายชื่อจาก /api/customers แสดง name ส่งค่า cust_id
       { key: "cust_id",    label: "ลูกค้า",   type: "select",
-        optionsFrom: { api: "/api/customers", value: "cust_id", label: "name" } },
+        optionsFrom: { api: "/api/customers", value: "cust_id", label: "name" } },                                
       { key: "order_date", label: "วันที่สั่ง", type: "date" },
       { key: "status",     label: "สถานะ",    type: "select", options: STATUSES },
     ],
@@ -87,7 +91,8 @@ function makeFieldHtml(field, idPrefix, value = "") {
       const optionValue = typeof option === "object" ? option.value : option;
       const optionLabel = typeof option === "object" ? option.label : (option || "ทั้งหมด");
       const selected = String(optionValue) === String(value) ? "selected" : "";
-      optionsHtml += `<option value="${optionValue}" ${selected}>${optionLabel}</option>`;
+      const disabled = typeof option === "object" && option.disabled ? "disabled" : "";
+      optionsHtml += `<option value="${optionValue}" ${selected} ${disabled}>${optionLabel}</option>`;
     }
     input = `<select id="${id}">${optionsHtml}</select>`;
   } else {
@@ -158,22 +163,28 @@ function showTable(result) {
   const columns = Object.keys(rows[0]);
   let headHtml = "";
   for (const column of columns) {
-    headHtml += `<th>${column}</th>`;
+  const title = column === entity.idKey ? "ลำดับ" : column;
+  headHtml += `<th>${title}</th>`;
   }
   $("#tableHead").innerHTML = headHtml + "<th>จัดการ</th>";
 
-  let bodyHtml = "";
-  for (const row of rows) {
-    const id = row[entity.idKey];
-    bodyHtml += "<tr>";
-    for (const column of columns) {
-      bodyHtml += `<td>${row[column] ?? "—"}</td>`;     // NULL แสดงเป็น —
-    }
-    bodyHtml += `<td>
-        <button class="btn sm" onclick="editRow(${id})">แก้ไข</button>
-        <button class="btn sm del" onclick="deleteRow(${id})">ลบ</button>
-      </td></tr>`;
+  
+ let bodyHtml = "";
+
+for (const [index, row] of rows.entries()) {
+  const id = row[entity.idKey];
+  bodyHtml += "<tr>";
+
+  for (const column of columns) {
+    const value = column === entity.idKey ? index + 1 : row[column];
+    bodyHtml += `<td>${value ?? "—"}</td>`;
   }
+
+  bodyHtml += `<td>
+      <button class="btn sm" onclick="editRow(${id})">แก้ไข</button>
+      <button class="btn sm del" onclick="deleteRow(${id})">ลบ</button>
+    </td></tr>`;
+}
   $("#tableBody").innerHTML = bodyHtml;
 }
 
@@ -206,7 +217,25 @@ async function saveForm() {
   const entity = ENTITIES[currentTab];
   const data = readForm();
 
+  if (currentTab === "products") {
+    if (!data.category) {
+      alert("⚠️ กรุณาเลือกหมวดหมู่");
+      return;
+    }
+
+    if (data.price === "" || Number(data.price) < 0) {
+      alert("⚠️ ราคาต้องเป็น 0 หรือมากกว่า");
+      return;
+    }
+
+    if (data.stock === "" || !Number.isInteger(Number(data.stock)) || Number(data.stock) < 0) {
+      alert("⚠️ สต็อกต้องเป็นจำนวนเต็ม 0 หรือมากกว่า");
+      return;
+    }
+  }
+
   let result;
+
   if (editingId === null) {
     result = await callApi(entity.api, "POST", data);
   } else {
@@ -217,6 +246,7 @@ async function saveForm() {
     alert("⚠️ " + result.error);
     return;
   }
+
   $("#modal").classList.add("hidden");
   search();
 }

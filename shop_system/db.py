@@ -115,17 +115,24 @@ def get_product(product_id):
 
 def create_product(data):
     """เพิ่มสินค้าใหม่"""
+    name = data["name"].strip()
+    _check_product_name_unique(name)
+
     sql = """INSERT INTO product (name, category, price, stock)
              VALUES (%s, %s, %s, %s)"""
-    return run_command(sql, (data["name"], blank_to_none(data.get("category")),
+    return run_command(sql, (name, blank_to_none(data.get("category")),
                              data["price"], data["stock"]))
 
 
 def update_product(product_id, data):
     """แก้ไขข้อมูลสินค้า"""
-    sql = """UPDATE product SET name = %s, category = %s, price = %s, stock = %s
+    name = data["name"].strip()
+    _check_product_name_unique(name, product_id)
+
+    sql = """UPDATE product
+             SET name = %s, category = %s, price = %s, stock = %s
              WHERE product_id = %s"""
-    return run_command(sql, (data["name"], blank_to_none(data.get("category")),
+    return run_command(sql, (name, blank_to_none(data.get("category")),
                              data["price"], data["stock"], product_id))
 
 
@@ -137,6 +144,12 @@ def delete_product(product_id):
     if run_query(sql, (product_id, product_id))[0]["n"]:
         raise ValueError("สินค้านี้มีในออเดอร์หรือรีวิวแล้ว ลบไม่ได้")
     return run_command("DELETE FROM product WHERE product_id = %s", (product_id,))
+
+def _check_product_name_unique(name, product_id=0):
+    """ห้ามมีชื่อสินค้าซ้ำ"""
+    sql = "SELECT 1 FROM product WHERE name = %s AND product_id <> %s"
+    if run_query(sql, (name, product_id)):
+        raise ValueError(f"มีสินค้าชื่อ {name} อยู่แล้ว")
 
 
 # ---------- 4. ออเดอร์ (shop_order) ----------
