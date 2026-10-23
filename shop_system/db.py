@@ -41,22 +41,65 @@ def empty_to_none(value):
 
 # ---------- customer ----------
 
+TIER_ORDER = ["regular", "silver", "gold", "vip"]
+TIER_RULES = [("vip", 60000), ("gold", 30000), ("silver", 15000)]
+
+
 def search_customers(filters):
-    sql = "SELECT * FROM customer WHERE 1=1"
+    sql = """
+        SELECT customer.*,
+               IFNULL(spending.total, 0) AS total_spent
+        FROM customer
+        LEFT JOIN (
+            SELECT shop_order.cust_id,
+                   SUM(order_line.qty * order_line.unit_price) AS total
+            FROM shop_order
+            JOIN order_line ON shop_order.order_id = order_line.order_id
+            WHERE shop_order.status <> 'cancelled'
+            GROUP BY shop_order.cust_id
+        ) AS spending ON customer.cust_id = spending.cust_id
+        WHERE 1=1
+    """
     params = []
 
     if filters.get("name"):
-        sql += " AND name LIKE %s"
+        sql += " AND customer.name LIKE %s"
         params.append("%" + filters["name"] + "%")
     if filters.get("email"):
-        sql += " AND email LIKE %s"
+        sql += " AND customer.email LIKE %s"
         params.append("%" + filters["email"] + "%")
     if filters.get("tier"):
-        sql += " AND tier = %s"
+        sql += " AND customer.tier = %s"
         params.append(filters["tier"])
 
-    sql += " ORDER BY cust_id"
+    sql += " ORDER BY customer.cust_id"
     return run_query(sql, params)
+
+
+def get_total_spent(cust_id):
+    sql = """
+        SELECT IFNULL(SUM(order_line.qty * order_line.unit_price), 0) AS total
+        FROM shop_order
+        JOIN order_line ON shop_order.order_id = order_line.order_id
+        WHERE shop_order.cust_id = %s AND shop_order.status <> 'cancelled'
+    """
+    return run_query(sql, (cust_id,))[0]["total"]
+
+
+def promote_customer(cust_id):
+    total_spent = get_total_spent(cust_id)
+
+    new_tier = "regular"
+    for tier, minimum in TIER_RULES:
+        if total_spent >= minimum:
+            new_tier = tier
+            break
+
+    customer = get_customer(cust_id)
+    if customer is None or customer["tier"] not in TIER_ORDER:
+        return
+    if TIER_ORDER.index(new_tier) > TIER_ORDER.index(customer["tier"]):
+        run_command("UPDATE customer SET tier = %s WHERE cust_id = %s", (new_tier, cust_id))
 
 
 def get_customer(cust_id):
@@ -287,6 +330,7 @@ def create_order(data):
     sql = "INSERT INTO shop_order (cust_id, order_date, status) VALUES (%s, %s, %s)"
     result = run_command(sql, (data["cust_id"], data["order_date"], data["status"]))
     save_payment(result["new_id"], data["order_date"], payment)
+    promote_customer(data["cust_id"])
     return result
 
 
@@ -299,6 +343,7 @@ def update_order(order_id, data):
     sql = "UPDATE shop_order SET cust_id = %s, order_date = %s, status = %s WHERE order_id = %s"
     result = run_command(sql, (data["cust_id"], data["order_date"], data["status"], order_id))
     save_payment(order_id, data["order_date"], payment)
+    promote_customer(data["cust_id"])
     return result
 
 

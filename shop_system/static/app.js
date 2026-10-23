@@ -2,12 +2,12 @@
 
 // ---------- ตั้งค่า ----------
 const LABELS = {
-  regular: "ทั่วไป", silver: "ซิลเวอร์", gold: "โกลด์",
+  regular: "ทั่วไป", silver: "ซิลเวอร์", gold: "โกลด์", vip: "วีไอพี",
   pending: "รอชำระเงิน", paid: "ชำระแล้ว", shipped: "จัดส่งแล้ว", completed: "สำเร็จ", cancelled: "ยกเลิก",
 };
 const withLabels = values => values.map(value => ({ value, label: LABELS[value] }));
 
-const TIER_OPTIONS = withLabels(["regular", "silver", "gold"]);
+const TIER_OPTIONS = withLabels(["regular", "silver", "gold", "vip"]);
 const STATUS_OPTIONS = withLabels(["pending", "paid", "shipped", "completed", "cancelled"]);
 const CATEGORY_GROUPS = [
   { label: "ชิ้นส่วนหลัก",        options: ["ซีพียู", "เมนบอร์ด", "แรม", "การ์ดจอ", "พาวเวอร์ซัพพลาย", "เคสคอมพิวเตอร์"] },
@@ -21,10 +21,10 @@ const COLUMN_LABELS = {
   category: "หมวดหมู่", price: "ราคา (บาท)", stock: "สต็อก",
   customer_name: "ลูกค้า", order_date: "วันที่สั่ง", status: "สถานะ",
   items: "สินค้าที่สั่ง", quantity: "จำนวน (ชิ้น)",
-  total: "ยอดรวม (บาท)",
+  total: "ยอดรวม (บาท)", total_spent: "ยอดซื้อสะสม (บาท)",
 };
-const MONEY_COLUMNS = ["price", "total"];
-const NUMBER_COLUMNS = ["price", "total", "stock", "quantity"];
+const MONEY_COLUMNS = ["price", "total", "total_spent"];
+const NUMBER_COLUMNS = ["price", "total", "total_spent", "stock", "quantity"];
 const BADGE_COLUMNS = ["tier", "status"];
 
 const ENTITIES = {

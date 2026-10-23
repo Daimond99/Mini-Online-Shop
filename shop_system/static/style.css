@@ -128,6 +128,7 @@ tbody tr:hover td { background: #E8EDF7; }
 .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--tint); color: var(--mute); white-space: nowrap; }
 .badge.regular   { background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
 .badge.gold      { background: #FDF3D7; color: #8A6100; }
+.badge.vip       { background: #2B2B33; color: #F4B731; }
 .badge.silver    { background: #ECEEF3; color: #4A5568; }
 .badge.pending   { background: #FFF4DB; color: #8A6100; }
 .badge.paid      { background: #E3EEFF; color: #1F4FB8; }

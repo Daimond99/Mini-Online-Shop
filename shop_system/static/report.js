@@ -6,7 +6,7 @@ const SUMMARY_ICONS = {
   "รายได้รวม (บาท)": "💰", "ออเดอร์รอดำเนินการ": "⏳",
 };
 
-const TIER_LABELS = { regular: "ทั่วไป", silver: "ซิลเวอร์", gold: "โกลด์" };
+const TIER_LABELS = { regular: "ทั่วไป", silver: "ซิลเวอร์", gold: "โกลด์", vip: "วีไอพี" };
 
 // รายงานบังคับ 3 รายการ: bar = คอลัมน์ที่วาดแถบ, max = ค่าเต็มของแถบ
 const REPORT_INFO = {
