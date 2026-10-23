@@ -471,16 +471,3 @@ def ranking_customers_by_spending():
         LIMIT 10
     """
     return run_query(sql)
-
-
-RANKINGS = [
-    ("products-qty", "สินค้าขายดี", ranking_products_by_quantity),
-    ("products-revenue", "สินค้าทำเงินสูงสุด", ranking_products_by_revenue),
-    ("customers-spend", "ลูกค้าซื้อมากสุด", ranking_customers_by_spending),
-]
-
-REPORTS = [
-    ("best-selling", "สินค้าขายดี 5 อันดับ", report_best_selling),
-    ("top-customers", "ลูกค้าที่ยอดซื้อมากกว่าค่าเฉลี่ย", report_customers_above_avg),
-    ("high-rated", "สินค้าที่คะแนนรีวิวเฉลี่ย 4 ขึ้นไป", report_high_rated),
-]

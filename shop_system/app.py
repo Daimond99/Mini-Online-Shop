@@ -1,37 +1,36 @@
-# app.py — รับคำขอจากหน้าเว็บ แล้วส่งต่อให้ db.py (ไฟล์นี้ไม่มี SQL)
-# รัน: python app.py แล้วเปิด http://127.0.0.1:5000
-
 from flask import Flask, request, jsonify, render_template
 import db
 
 app = Flask(__name__)
-app.json.sort_keys = False      # หัวตารางเรียงตามลำดับใน SELECT
+app.json.sort_keys = False
 
 
 def reply(function, *args):
-    """เรียกฟังก์ชันใน db.py แล้วตอบหน้าเว็บเป็น JSON
-    สำเร็จ -> {"ok": true, "data": ...}   ผิดพลาด -> {"ok": false, "error": "ข้อความ"}"""
     try:
-        return jsonify({"ok": True, "data": function(*args)})
+        data = function(*args)
+        return jsonify({"ok": True, "data": data})
     except KeyError as error:
-        return jsonify({"ok": False, "error": f"ข้อมูลไม่ครบ: ขาด {error}"}), 400
+        return jsonify({"ok": False, "error": "ข้อมูลไม่ครบ: ขาด " + str(error)}), 400
     except Exception as error:
         return jsonify({"ok": False, "error": str(error)}), 400
 
 
 def get_body():
-    """อ่านข้อมูลที่หน้าเว็บส่งมา (JSON) ถ้าส่งมาผิดรูปแบบจะได้ dict ว่าง"""
-    return request.get_json(silent=True) or {}
+    body = request.get_json(silent=True)
+    if body is None:
+        return {}
+    return body
 
 
 def get_filters():
-    """อ่านเงื่อนไขค้นหาจาก URL เช่น ?name=สม&tier=gold (เอาเฉพาะช่องที่กรอก)"""
-    return {key: value for key, value in request.args.items() if value}
+    filters = {}
+    for key in request.args:
+        if request.args[key] != "":
+            filters[key] = request.args[key]
+    return filters
 
 
-# ============================================================
-# หน้าเว็บ
-# ============================================================
+# ---------- pages ----------
 
 @app.route("/")
 def home_page():
@@ -43,9 +42,7 @@ def report_page():
     return render_template("report.html")
 
 
-# ============================================================
-# ลูกค้า   GET = ค้นหา/ดึง   POST = เพิ่ม   PUT = แก้ไข   DELETE = ลบ
-# ============================================================
+# ---------- customer ----------
 
 @app.route("/api/customers", methods=["GET"])
 def customers_search():
@@ -72,9 +69,7 @@ def customers_delete(cust_id):
     return reply(db.delete_customer, cust_id)
 
 
-# ============================================================
-# สินค้า
-# ============================================================
+# ---------- product ----------
 
 @app.route("/api/products", methods=["GET"])
 def products_search():
@@ -101,9 +96,7 @@ def products_delete(product_id):
     return reply(db.delete_product, product_id)
 
 
-# ============================================================
-# ออเดอร์
-# ============================================================
+# ---------- order ----------
 
 @app.route("/api/orders", methods=["GET"])
 def orders_search():
@@ -130,47 +123,43 @@ def orders_delete(order_id):
     return reply(db.delete_order, order_id)
 
 
-# ============================================================
-# รายงาน
-# ============================================================
+# ---------- report ----------
 
 @app.route("/api/reports/summary")
 def reports_summary():
     return reply(db.report_summary)
 
 
-@app.route("/api/reports")
-def reports_list():
-    """รายชื่อรายงานทั้งหมด (มาจาก REPORTS ท้าย db.py)"""
-    names = [{"key": key, "title": title} for key, title, function in db.REPORTS]
-    return jsonify({"ok": True, "data": names})
+@app.route("/api/reports/best-selling")
+def reports_best_selling():
+    return reply(db.report_best_selling)
 
 
-@app.route("/api/reports/<key>")
-def reports_run(key):
-    """รันรายงานตาม key เช่น /api/reports/best-selling"""
-    for report_key, title, function in db.REPORTS:
-        if report_key == key:
-            return reply(function)
-    return jsonify({"ok": False, "error": "ไม่พบรายงานนี้"}), 404
+@app.route("/api/reports/top-customers")
+def reports_top_customers():
+    return reply(db.report_customers_above_avg)
 
 
-# ============================================================
-# จัดอันดับ Top 10 (ฟีเจอร์พิเศษ)
-# ============================================================
-
-@app.route("/api/rankings")
-def rankings_list():
-    names = [{"key": key, "title": title} for key, title, function in db.RANKINGS]
-    return jsonify({"ok": True, "data": names})
+@app.route("/api/reports/high-rated")
+def reports_high_rated():
+    return reply(db.report_high_rated)
 
 
-@app.route("/api/rankings/<key>")
-def rankings_run(key):
-    for ranking_key, title, function in db.RANKINGS:
-        if ranking_key == key:
-            return reply(function)
-    return jsonify({"ok": False, "error": "ไม่พบการจัดอันดับนี้"}), 404
+# ---------- top 10 ----------
+
+@app.route("/api/rankings/products-qty")
+def rankings_products_qty():
+    return reply(db.ranking_products_by_quantity)
+
+
+@app.route("/api/rankings/products-revenue")
+def rankings_products_revenue():
+    return reply(db.ranking_products_by_revenue)
+
+
+@app.route("/api/rankings/customers-spend")
+def rankings_customers_spend():
+    return reply(db.ranking_customers_by_spending)
 
 
 if __name__ == "__main__":

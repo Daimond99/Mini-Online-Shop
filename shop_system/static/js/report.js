@@ -1,0 +1,115 @@
+// ขอข้อมูลจากหลังบ้าน แล้วคืนเฉพาะส่วน data
+async function getData(url) {
+  const response = await fetch(url);
+  const result = await response.json();
+  return result.data;
+}
+
+// กันข้อความแปลก ๆ ไม่ให้กลายเป็น HTML
+function safe(text) {
+  return String(text).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+// ใส่ลูกน้ำให้ตัวเลข เช่น 112620.00 -> 112,620
+function formatNumber(value) {
+  return Number(value).toLocaleString("th-TH");
+}
+
+
+// การ์ดตัวเลขด้านบน
+async function showSummary() {
+  const data = await getData("/api/reports/summary");
+
+  let html = "";
+  for (const label in data) {
+    html += "<div class='metric'>";
+    html += "<div class='metric-num'>" + formatNumber(data[label]) + "</div>";
+    html += "<div class='metric-label'>" + label + "</div>";
+    html += "</div>";
+  }
+  document.getElementById("summary").innerHTML = html;
+}
+
+
+// กราฟแท่ง Top 10: คอลัมน์แรก = ชื่อ, คอลัมน์ที่สอง = ตัวเลข
+async function showChart(key) {
+  const rows = await getData("/api/rankings/" + key);
+  const box = document.getElementById("chart-" + key);
+
+  if (rows.length === 0) {
+    box.innerHTML = "<p class='status'>ยังไม่มีข้อมูล</p>";
+    return;
+  }
+
+  const columns = Object.keys(rows[0]);
+  const nameColumn = columns[0];
+  const valueColumn = columns[1];
+
+  let max = 0;
+  for (const row of rows) {
+    if (Number(row[valueColumn]) > max) {
+      max = Number(row[valueColumn]);
+    }
+  }
+
+  let html = "";
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const percent = Number(row[valueColumn]) / max * 100;
+
+    html += "<div class='chart-row'>";
+    html += "<span class='chart-no'>" + (i + 1) + "</span>";
+    html += "<span class='chart-name'>" + safe(row[nameColumn]) + "</span>";
+    html += "<div class='chart-bar'><div style='width:" + percent + "%'></div></div>";
+    html += "<span class='chart-value'>" + formatNumber(row[valueColumn]) + "</span>";
+    html += "</div>";
+  }
+  box.innerHTML = html;
+}
+
+
+// ตารางรายงาน: หัวตาราง = ชื่อหลัง AS ใน SQL
+async function showReport(key) {
+  const rows = await getData("/api/reports/" + key);
+  const box = document.getElementById("report-" + key);
+
+  if (rows.length === 0) {
+    box.innerHTML = "<p class='status'>ไม่มีข้อมูล</p>";
+    return;
+  }
+
+  const columns = Object.keys(rows[0]);
+
+  let html = "<table><tr><th>#</th>";
+  for (const column of columns) {
+    html += "<th>" + column + "</th>";
+  }
+  html += "</tr>";
+
+  for (let i = 0; i < rows.length; i++) {
+    html += "<tr><td>" + (i + 1) + "</td>";
+    for (const column of columns) {
+      const value = rows[i][column];
+      if (isNaN(value)) {
+        html += "<td>" + safe(value) + "</td>";
+      } else {
+        html += "<td>" + formatNumber(value) + "</td>";
+      }
+    }
+    html += "</tr>";
+  }
+  html += "</table>";
+
+  box.innerHTML = html;
+}
+
+
+showSummary();
+
+showChart("products-qty");
+showChart("products-revenue");
+showChart("customers-spend");
+
+showReport("best-selling");
+showReport("top-customers");
+showReport("high-rated");

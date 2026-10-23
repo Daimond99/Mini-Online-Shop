@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>รายงาน — Mini Online Shop</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <header class="topbar">
@@ -17,18 +17,42 @@
 
   <main class="container">
     <h2 class="section-title">ภาพรวมร้าน</h2>
-    <section class="cards" id="summary"></section>
+    <div class="cards" id="summary"></div>
 
     <h2 class="section-title">จัดอันดับ Top 10</h2>
-    <section class="card">
-      <div id="rankingTabs" class="chips"></div>
-      <div id="rankingChart" class="rank-chart"></div>
-    </section>
+    <div class="chart-grid">
+      <section class="card">
+        <h3>สินค้าขายดี (ชิ้น)</h3>
+        <div id="chart-products-qty"></div>
+      </section>
+      <section class="card">
+        <h3>สินค้าทำเงินสูงสุด (บาท)</h3>
+        <div id="chart-products-revenue"></div>
+      </section>
+      <section class="card">
+        <h3>ลูกค้าซื้อมากสุด (บาท)</h3>
+        <div id="chart-customers-spend"></div>
+      </section>
+    </div>
 
     <h2 class="section-title">รายงานตามโจทย์</h2>
-    <div id="reports"></div>
+    <section class="card">
+      <h3>รายงานที่ 1: สินค้าขายดี 5 อันดับ</h3>
+      <p class="report-desc">JOIN 3 ตาราง + GROUP BY + SUM(qty)</p>
+      <div class="table-wrap" id="report-best-selling"></div>
+    </section>
+    <section class="card">
+      <h3>รายงานที่ 2: ลูกค้าที่ยอดซื้อมากกว่าค่าเฉลี่ย</h3>
+      <p class="report-desc">JOIN 3 ตาราง + GROUP BY + HAVING + subquery AVG</p>
+      <div class="table-wrap" id="report-top-customers"></div>
+    </section>
+    <section class="card">
+      <h3>รายงานที่ 3: สินค้าที่คะแนนรีวิวเฉลี่ย 4 ขึ้นไป</h3>
+      <p class="report-desc">JOIN 3 ตาราง + GROUP BY + AVG + HAVING</p>
+      <div class="table-wrap" id="report-high-rated"></div>
+    </section>
   </main>
 
-  <script src="{{ url_for('static', filename='report.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/report.js') }}"></script>
 </body>
 </html>

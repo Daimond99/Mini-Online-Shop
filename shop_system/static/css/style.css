@@ -122,7 +122,6 @@ tbody tr:hover td { background: #E8EDF7; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .actions { white-space: nowrap; text-align: right; }
 .muted { color: var(--mute); }
-.rank { color: var(--mute); font-weight: 700; width: 44px; }
 
 /* ป้ายสถานะ */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--tint); color: var(--mute); white-space: nowrap; }
@@ -150,35 +149,21 @@ tbody tr:hover td { background: #E8EDF7; }
   background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 16px;
   text-align: center; box-shadow: 0 4px 14px rgba(40, 60, 110, .06);
 }
-.metric-icon { font-size: 22px; }
-.metric-num { font-size: 28px; font-weight: 800; color: var(--navy); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.metric-num { font-size: 28px; font-weight: 800; color: var(--navy); }
 .metric-label { font-size: 13px; color: var(--mute); margin-top: 2px; }
 
-/* หน้ารายงาน: กล่องรายงาน */
-.report-head { margin-bottom: 14px; }
-.report-no { display: inline-block; font-size: 11px; font-weight: 700; color: #8A6100; background: #FDF3D7; padding: 2px 10px; border-radius: 999px; margin-bottom: 6px; }
-.report-desc { font-size: 14px; color: var(--mute); margin-top: 4px; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.tag { font-size: 11.5px; font-weight: 600; color: var(--navy); background: var(--tint); border: 1px solid var(--line); padding: 2px 8px; border-radius: 6px; font-family: Consolas, monospace; }
-.report .table-wrap { max-height: 360px; }
-.bar-cell { display: flex; align-items: center; gap: 10px; min-width: 160px; }
-.bar { flex: 1; height: 8px; background: var(--tint); border-radius: 999px; overflow: hidden; }
-.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #E89B1B); border-radius: 999px; }
-.bar-num { min-width: 70px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* หน้ารายงาน: กราฟ Top 10 */
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 20px; }
+.chart-grid h3 { margin-bottom: 14px; }
+.chart-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+.chart-no { width: 20px; color: var(--mute); font-weight: 700; }
+.chart-name { width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-bar { flex: 1; height: 12px; background: var(--tint); border-radius: 6px; overflow: hidden; }
+.chart-bar div { height: 100%; background: var(--gold); border-radius: 6px; }
+.chart-value { width: 80px; text-align: right; font-weight: 700; }
 
-/* หน้ารายงาน: จัดอันดับ Top 10 */
-.rank-chart { margin-top: 18px; }
-.rank-unit { font-size: 13px; color: var(--mute); margin-bottom: 10px; }
-.rank-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
-.rank-no {
-  flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 13px; font-weight: 700; background: var(--tint); color: var(--mute);
-}
-.rank-no.top { background: var(--gold); color: var(--navy); }
-.rank-name { flex: none; width: 220px; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rank-bar { flex: 1; height: 14px; background: var(--tint); border-radius: 999px; overflow: hidden; }
-.rank-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #E89B1B); border-radius: 999px; transition: width .4s ease; }
-.rank-value { flex: none; min-width: 90px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* หน้ารายงาน: ตารางรายงาน */
+.report-desc { font-size: 13px; color: var(--mute); margin: 4px 0 12px; font-family: Consolas, monospace; }
 
 /* ฟอร์มป๊อปอัป */
 .modal {
@@ -212,6 +197,4 @@ tbody tr:hover td { background: #E8EDF7; }
   .card { padding: 16px; }
   .cards { grid-template-columns: repeat(2, 1fr); }
   .metric-num { font-size: 22px; }
-  .rank-name { width: 110px; }
-  .rank-value { min-width: 60px; }
 }

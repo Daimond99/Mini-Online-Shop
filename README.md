@@ -12,7 +12,14 @@
 ## โครงสร้างโปรเจกต์
 
 ```
-shop_system/              เว็บ: app.py (URL), db.py (SQL ทั้งหมด), config.example.py, templates/, static/
+shop_system/
+  app.py                  รับคำขอจากหน้าเว็บ ส่งต่อให้ db.py
+  db.py                   คำสั่ง SQL ทั้งหมด
+  config.example.py       แบบไฟล์ตั้งค่า MySQL (คัดลอกเป็น config.py)
+  templates/              หน้าเว็บ: index.html (จัดการข้อมูล), report.html (รายงาน)
+  static/css/style.css    หน้าตาเว็บ
+  static/js/manage.js     โค้ดหน้าจัดการข้อมูล
+  static/js/report.js     โค้ดหน้ารายงาน + กราฟ Top 10
 database/
   sql/schema.sql          ตาราง + ข้อมูลตัวอย่าง
   diagram/er-diagram.png  ER diagram
