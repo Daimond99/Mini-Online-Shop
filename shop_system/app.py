@@ -13,8 +13,15 @@ def reply(function, *args):
     สำเร็จ -> {"ok": true, "data": ...}   ผิดพลาด -> {"ok": false, "error": "ข้อความ"}"""
     try:
         return jsonify({"ok": True, "data": function(*args)})
+    except KeyError as error:
+        return jsonify({"ok": False, "error": f"ข้อมูลไม่ครบ: ขาด {error}"}), 400
     except Exception as error:
         return jsonify({"ok": False, "error": str(error)}), 400
+
+
+def get_body():
+    """อ่านข้อมูลที่หน้าเว็บส่งมา (JSON) ถ้าส่งมาผิดรูปแบบจะได้ dict ว่าง"""
+    return request.get_json(silent=True) or {}
 
 
 def get_filters():
@@ -52,12 +59,12 @@ def customers_get(cust_id):
 
 @app.route("/api/customers", methods=["POST"])
 def customers_create():
-    return reply(db.create_customer, request.json)
+    return reply(db.create_customer, get_body())
 
 
 @app.route("/api/customers/<int:cust_id>", methods=["PUT"])
 def customers_update(cust_id):
-    return reply(db.update_customer, cust_id, request.json)
+    return reply(db.update_customer, cust_id, get_body())
 
 
 @app.route("/api/customers/<int:cust_id>", methods=["DELETE"])
@@ -81,12 +88,12 @@ def products_get(product_id):
 
 @app.route("/api/products", methods=["POST"])
 def products_create():
-    return reply(db.create_product, request.json)
+    return reply(db.create_product, get_body())
 
 
 @app.route("/api/products/<int:product_id>", methods=["PUT"])
 def products_update(product_id):
-    return reply(db.update_product, product_id, request.json)
+    return reply(db.update_product, product_id, get_body())
 
 
 @app.route("/api/products/<int:product_id>", methods=["DELETE"])
@@ -110,12 +117,12 @@ def orders_get(order_id):
 
 @app.route("/api/orders", methods=["POST"])
 def orders_create():
-    return reply(db.create_order, request.json)
+    return reply(db.create_order, get_body())
 
 
 @app.route("/api/orders/<int:order_id>", methods=["PUT"])
 def orders_update(order_id):
-    return reply(db.update_order, order_id, request.json)
+    return reply(db.update_order, order_id, get_body())
 
 
 @app.route("/api/orders/<int:order_id>", methods=["DELETE"])
@@ -146,6 +153,24 @@ def reports_run(key):
         if report_key == key:
             return reply(function)
     return jsonify({"ok": False, "error": "ไม่พบรายงานนี้"}), 404
+
+
+# ============================================================
+# จัดอันดับ Top 10 (ฟีเจอร์พิเศษ)
+# ============================================================
+
+@app.route("/api/rankings")
+def rankings_list():
+    names = [{"key": key, "title": title} for key, title, function in db.RANKINGS]
+    return jsonify({"ok": True, "data": names})
+
+
+@app.route("/api/rankings/<key>")
+def rankings_run(key):
+    for ranking_key, title, function in db.RANKINGS:
+        if ranking_key == key:
+            return reply(function)
+    return jsonify({"ok": False, "error": "ไม่พบการจัดอันดับนี้"}), 404
 
 
 if __name__ == "__main__":

@@ -4,20 +4,18 @@
 
 **ทำอะไรได้**
 - จัดการลูกค้า สินค้า และออเดอร์ (ค้นหา เพิ่ม แก้ไข ลบ)
+- ออเดอร์แสดงสินค้าที่สั่ง จำนวน และยอดรวม บันทึกยอดเงินที่ชำระได้
 - จัดส่งได้เฉพาะออเดอร์ที่จ่ายเงินแล้ว
 - หน้ารายงาน: สินค้าขายดี, ลูกค้าที่ซื้อเกินค่าเฉลี่ย, สินค้าคะแนนรีวิว ≥ 4
+- ฟีเจอร์พิเศษ: จัดอันดับ Top 10 พร้อมกราฟ (สินค้าขายดี, สินค้าทำเงินสูงสุด, ลูกค้าซื้อมากสุด)
 
 ## โครงสร้างโปรเจกต์
 
 ```
-shop_system/              เว็บ: app.py (URL), db.py (SQL ทั้งหมด), config.py, templates/, static/
+shop_system/              เว็บ: app.py (URL), db.py (SQL ทั้งหมด), config.example.py, templates/, static/
 database/
   sql/schema.sql          ตาราง + ข้อมูลตัวอย่าง
   diagram/er-diagram.png  ER diagram
-docs/
-  guides/                 คู่มือรัน (run-guide.md)
-  requirements/           โจทย์ PDF + เกณฑ์คะแนน (grading-rubric.md)
-  planning/               แผนงาน (claude-code-plan.md)
 ```
 
 ## วิธีติดตั้ง
@@ -40,7 +38,7 @@ USE project69;
 
 แล้วรันไฟล์ `database/sql/schema.sql` ทั้งไฟล์ (สร้างตารางและใส่ข้อมูลตัวอย่าง)
 
-**3. ตั้งค่ารหัสผ่าน MySQL** — เปิด `shop_system/config.py` แก้ `DB_USER` และ `DB_PASSWORD` ให้ตรงกับ MySQL ของเครื่อง
+**3. ตั้งค่ารหัสผ่าน MySQL** — คัดลอก `shop_system/config.example.py` เป็น `shop_system/config.py` แล้วแก้ `DB_USER` และ `DB_PASSWORD` ให้ตรงกับ MySQL ของเครื่อง
 
 **4. รัน**
 
@@ -50,4 +48,4 @@ pip install -r requirements.txt
 python app.py
 ```
 
-เปิด http://127.0.0.1:5000 (หน้ารายงานอยู่ที่ `/report`) กดปุ่ม "ค้นหา" เพื่อแสดงข้อมูล
+เปิด http://127.0.0.1:5000 (หน้ารายงานอยู่ที่ `/report`)

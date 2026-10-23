@@ -6,3 +6,7 @@ General/
 .claude/
 # เอกสารโจทย์ของอาจารย์
 *.pdf
+# รหัสผ่านฐานข้อมูลของเครื่องตัวเอง (ใช้ shop_system/config.example.py เป็นแบบ)
+shop_system/config.py
+# เอกสารไม่ต้องขึ้น git
+docs/

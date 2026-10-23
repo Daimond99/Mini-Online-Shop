@@ -143,5 +143,50 @@ async function showReports() {
     list.data.map((report, i) => makeReportCard(report, results[i])).join("");
 }
 
+// ---------- จัดอันดับ Top 10 (กราฟแท่งแนวนอน) ----------
+function makeRankingHtml(rows) {
+  if (rows.length === 0) return "<p class='status'>ยังไม่มีข้อมูล</p>";
+
+  const [nameColumn, valueColumn] = Object.keys(rows[0]);
+  const max = Math.max(...rows.map(row => Number(row[valueColumn])));
+
+  let html = `<p class="rank-unit">${escapeHtml(valueColumn)}</p>`;
+  rows.forEach((row, index) => {
+    const width = Math.round(Number(row[valueColumn]) / max * 100);
+    html += `
+      <div class="rank-row">
+        <span class="rank-no ${index < 3 ? "top" : ""}">${index + 1}</span>
+        <span class="rank-name">${escapeHtml(row[nameColumn])}</span>
+        <div class="rank-bar"><span style="width:${width}%"></span></div>
+        <span class="rank-value">${formatValue(row[valueColumn])}</span>
+      </div>`;
+  });
+  return html;
+}
+
+async function showRanking(key) {
+  for (const chip of document.querySelectorAll("#rankingTabs .chip")) {
+    chip.classList.toggle("active", chip.dataset.key === key);
+  }
+  const result = await getJson("/api/rankings/" + key);
+  document.querySelector("#rankingChart").innerHTML = result.ok
+    ? makeRankingHtml(result.data)
+    : `<div class="status err">⚠️ ${escapeHtml(result.error)}</div>`;
+}
+
+async function showRankings() {
+  const list = await getJson("/api/rankings");
+  document.querySelector("#rankingTabs").innerHTML = list.data
+    .map(item => `<button type="button" class="chip" data-key="${item.key}">${escapeHtml(item.title)}</button>`)
+    .join("");
+
+  document.querySelector("#rankingTabs").onclick = event => {
+    const chip = event.target.closest(".chip");
+    if (chip) showRanking(chip.dataset.key);
+  };
+  showRanking(list.data[0].key);
+}
+
 showSummaryCards();
+showRankings();
 showReports();

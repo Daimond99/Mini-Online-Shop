@@ -24,8 +24,8 @@ CREATE TABLE product (
     product_id  INT AUTO_INCREMENT PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
     category    VARCHAR(50),
-    price       DECIMAL(10,2) NOT NULL CHECK (price >= 0),
-    stock       INT NOT NULL DEFAULT 0 CHECK (stock >= 0)
+    price       DECIMAL(10,2) NOT NULL,
+    stock       INT NOT NULL DEFAULT 0
 );
  
 -- ---------- ออเดอร์ ----------
@@ -33,8 +33,7 @@ CREATE TABLE shop_order (
     order_id    INT AUTO_INCREMENT PRIMARY KEY,
     cust_id     INT NOT NULL,
     order_date  DATE NOT NULL,
-    status      VARCHAR(20) NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending','paid','shipped','completed','cancelled')),
+    status      VARCHAR(20) NOT NULL DEFAULT 'pending',   -- pending/paid/shipped/completed/cancelled
     FOREIGN KEY (cust_id) REFERENCES customer(cust_id)
 );
  

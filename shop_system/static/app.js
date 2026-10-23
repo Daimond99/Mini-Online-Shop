@@ -19,10 +19,12 @@ const CUSTOMER_OPTIONS = { api: "/api/customers", value: "cust_id", label: "name
 const COLUMN_LABELS = {
   name: "ชื่อ", email: "อีเมล", address: "ที่อยู่", tier: "ระดับ",
   category: "หมวดหมู่", price: "ราคา (บาท)", stock: "สต็อก",
-  customer_name: "ลูกค้า", order_date: "วันที่สั่ง", status: "สถานะ", total: "ยอดรวม (บาท)",
+  customer_name: "ลูกค้า", order_date: "วันที่สั่ง", status: "สถานะ",
+  items: "สินค้าที่สั่ง", quantity: "จำนวน (ชิ้น)",
+  total: "ยอดรวม (บาท)",
 };
 const MONEY_COLUMNS = ["price", "total"];
-const NUMBER_COLUMNS = ["price", "total", "stock"];
+const NUMBER_COLUMNS = ["price", "total", "stock", "quantity"];
 const BADGE_COLUMNS = ["tier", "status"];
 
 const ENTITIES = {
@@ -76,6 +78,7 @@ const ENTITIES = {
         placeholder: "เลือกลูกค้า", required: true },
       { key: "order_date", label: "วันที่สั่ง", type: "date", default: today, required: true },
       { key: "status",     label: "สถานะ",    type: "chips", options: STATUS_OPTIONS },
+      { key: "amount",     label: "ยอดเงิน (บาท)", type: "number", min: 0, placeholder: "เว้นว่างถ้ายังไม่ชำระ" },
     ],
   },
 };
@@ -135,6 +138,7 @@ function makeOptions(options, value) {
 function makeSelect(field, id, value) {
   let html = "";
   if (field.all) html += `<option value="">ทั้งหมด</option>`;
+  if (field.blank) html += `<option value="">${field.blank}</option>`;
   if (field.placeholder) html += `<option value="" disabled ${value ? "" : "selected"}>${field.placeholder}</option>`;
 
   if (field.groups) {
@@ -262,7 +266,10 @@ function showTable(result) {
 
   const hidden = entity.hide || [];
   const columns = Object.keys(currentRows[0]).filter(column => !hidden.includes(column));
-  const numClass = column => NUMBER_COLUMNS.includes(column) ? "num" : "";
+  const numClass = column => {
+    if (column === "items") return "wrap";
+    return NUMBER_COLUMNS.includes(column) ? "num" : "";
+  };
 
   let head = "";
   for (const column of columns) {
@@ -318,8 +325,8 @@ function validate(fields, data) {
     if (field.required && value === "") return (field.type === "select" ? "กรุณาเลือก" : "กรุณากรอก") + field.label;
     if (field.type === "number" && value !== "") {
       const number = Number(value);
-      if (Number.isNaN(number) || number < field.min) return `${field.label}ต้องเป็น ${field.min} หรือมากกว่า`;
-      if (field.integer && !Number.isInteger(number)) return field.label + "ต้องเป็นจำนวนเต็ม";
+      if (Number.isNaN(number) || number < field.min) return `${field.label} ต้องเป็น ${field.min} หรือมากกว่า`;
+      if (field.integer && !Number.isInteger(number)) return field.label + " ต้องเป็นจำนวนเต็ม";
     }
   }
   return null;
