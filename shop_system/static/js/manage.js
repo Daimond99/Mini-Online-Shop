@@ -39,6 +39,7 @@ const COLUMN_NAMES = {
   address: "ที่อยู่",
   tier: "ระดับ",
   total_spent: "ยอดซื้อสะสม (บาท)",
+  balance: "เงินคงเหลือ (บาท)",
   category: "หมวดหมู่",
   price: "ราคา (บาท)",
   stock: "สต็อก",
@@ -50,8 +51,8 @@ const COLUMN_NAMES = {
   total: "ยอดรวม (บาท)"
 };
 
-const MONEY_COLUMNS = ["price", "total", "total_spent"];
-const NUMBER_COLUMNS = ["price", "total", "total_spent", "stock", "quantity"];
+const MONEY_COLUMNS = ["price", "total", "total_spent", "balance"];
+const NUMBER_COLUMNS = ["price", "total", "total_spent", "balance", "stock", "quantity"];
 const BADGE_COLUMNS = ["tier", "status"];
 
 // แต่ละแท็บ: ช่องค้นหา (search) และช่องในฟอร์ม (form)
@@ -71,7 +72,8 @@ const TABS = {
       { key: "name", label: "ชื่อ", type: "text", required: true },
       { key: "email", label: "อีเมล", type: "email" },
       { key: "address", label: "ที่อยู่", type: "text" },
-      { key: "tier", label: "ระดับสมาชิก", type: "chips", options: TIER_OPTIONS }
+      { key: "tier", label: "ระดับสมาชิก", type: "chips", options: TIER_OPTIONS },
+      { key: "balance", label: "เงินคงเหลือ (บาท)", type: "number", min: 0, placeholder: "เว้นว่าง = 0" }
     ]
   },
 

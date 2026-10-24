@@ -15,7 +15,7 @@
 shop_system/
   app.py                  รับคำขอจากหน้าเว็บ ส่งต่อให้ db.py
   db.py                   คำสั่ง SQL ทั้งหมด
-  config.example.py       แบบไฟล์ตั้งค่า MySQL (คัดลอกเป็น config.py)
+  config.py               ตั้งค่าเชื่อม MySQL (ไม่อยู่ใน git สร้างเอง)
   templates/              หน้าเว็บ: index.html (จัดการข้อมูล), report.html (รายงาน)
   static/css/style.css    หน้าตาเว็บ
   static/js/manage.js     โค้ดหน้าจัดการข้อมูล
@@ -45,7 +45,15 @@ USE project69;
 
 แล้วรันไฟล์ `database/sql/schema.sql` ทั้งไฟล์ (สร้างตารางและใส่ข้อมูลตัวอย่าง)
 
-**3. ตั้งค่ารหัสผ่าน MySQL** — คัดลอก `shop_system/config.example.py` เป็น `shop_system/config.py` แล้วแก้ `DB_USER` และ `DB_PASSWORD` ให้ตรงกับ MySQL ของเครื่อง
+**3. ตั้งค่ารหัสผ่าน MySQL** — สร้างไฟล์ `shop_system/config.py` ใส่ค่าให้ตรงกับ MySQL ของเครื่อง
+
+```python
+DB_HOST = 'localhost'
+DB_USER = 'root'
+DB_PASSWORD = 'รหัสผ่านของคุณ'
+DB_NAME = 'project69'
+DB_PORT = 3306
+```
 
 **4. รัน**
 

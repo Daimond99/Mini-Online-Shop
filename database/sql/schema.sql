@@ -16,7 +16,8 @@ CREATE TABLE customer (
     name        VARCHAR(100) NOT NULL,
     email       VARCHAR(100) UNIQUE,
     address     VARCHAR(255),
-    tier        VARCHAR(20) NOT NULL DEFAULT 'regular'   -- regular / silver / gold
+    tier        VARCHAR(20) NOT NULL DEFAULT 'regular',  -- regular / silver / gold
+    balance     DECIMAL(10,2) NOT NULL DEFAULT 0         -- เงินคงเหลือในบัญชี
 );
  
 -- ---------- สินค้า ----------
